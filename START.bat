@@ -17,7 +17,7 @@ SET BUILD=MP
 SET CSV_NAME=%PROJECT%_%TYPE%.csv
 SET CFG_NAME=config.xml
 IF "%DebugXML%" equ "True" SET CFG_NAME=config_Deb.xml
-SET SN_LEN=16
+SET SN_LEN=12
 SET FOLDER=%SUITE_NAME%_%Ver%_%DateVer%
 SET on_Drive=N:
 SET SFIS_IP=172.27.76.10
@@ -38,67 +38,40 @@ IF EXIST PN.log DEL PN.log
 IF EXIST PN.txt DEL PN.txt
 IF EXIST op.dat GOTO SCANSN
 
-DiagPGM\Chopper-diag.exe /SB "^[Ss][0-9]{2}[0-9,AaBbCc][0-9]{5}$" -SIF op.jpg -EMF sb_msg_OP.msgdat -SFN ..\OP.dat -FS 30 -st "½Ð¿é¤J¤u¸¹\nPlease Enter Operator Number" -sbsize 800 300
+DiagPGM\Chopper-diag.exe /SB "^[Ss][0-9]{2}[0-9,AaBbCc][0-9]{5}$" -SIF op.jpg -EMF sb_msg_OP.msgdat -SFN ..\OP.dat -FS 30 -st "ï¿½Ð¿ï¿½Jï¿½uï¿½ï¿½\nPlease Enter Operator Number" -sbsize 800 300
 IF %ERRORLEVEL% NEQ 0 GOTO START_OP
 
 :START
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "<br>«ö¤Uªv¨ã¤WBAT PWR«ö¶s¡Aµ¥«Ý2¬í¦Z<br> <br> «ö¤UPWR BTN«ö¶s2s<br> <br>«öEnterÁäÄ~Äò" 0xFFFFFF -bg 0x223366
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "<br>ï¿½ï¿½ï¿½Uï¿½vï¿½ï¿½WBAT PWRï¿½ï¿½ï¿½sï¿½Aï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½Z<br> <br> ï¿½ï¿½ï¿½UPWR BTNï¿½ï¿½ï¿½s2s<br> <br>ï¿½ï¿½Enterï¿½ï¿½ï¿½~ï¿½ï¿½" 0xFFFFFF -bg 0x223366
 
 SET ScanTime=0
-:CheckScanner
-CD %~dp0
-DiagPGM\devcon_x64.exe find * >.\DiagPGM\Scanner.txt
-FIND /i "Honeywell N5600 Series Area Image Engine" .\DiagPGM\Scanner.txt
-IF %ERRORLEVEL% EQU 0 GOTO ScanSN
-FIND /i "SNAPI Imaging Interface" .\DiagPGM\Scanner.txt
-IF %ERRORLEVEL% EQU 0 GOTO OLDScanSN
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "ScanSN Abnormal <br> Please Check Scanner on IPC <br>½ÐÀË¬d¨êºj¬O§_¥¿½T¦w¸Ë <br>" 0xFFFFFF -bg 0x882222
-goto CheckScanner
 
-:ScanSN
-REM power off Scanner LED
-DiagPGM\KING-diags.exe -com 3 -br 9600 -f sn.txt -s /sb 16 55 0d
+:GetDutSN
+REM Get SN from DUT
+IF EXIST SN.dat DEL SN.dat
+
+REM Make sure the DUT is connected over adb, then read its serial number.
+adb wait-for-device
 TIMEOUT 1
 
-REM Use COM Scanner to Scan SN
-DiagPGM\KING-diags.exe -com 3 -br 9600 -f sn.txt -s /sb 16 54 0d
-SET /a ScanTime+=1
-IF %ScanTime% GTR 5 (
-	DiagPGM\Screen-diag.exe -nl -enter /SS 55 "ScanSN Abnormal <br> Please Check Scanner or Label <br>½ÐÀË¬d±ø½X¨êºj©Î¬OPCBA¼ÐÅÒ¦ì¸m <br>" 0xFFFFFF -bg 0x882222
-	GOTO START
-)
-REM Seperate SN File
-DiagPGM\PT-diags.exe -sl 3 /GStr sn.txt > SN.dat
-REM Count SN Length for 16
-DiagPGM\NPT-diags.exe /cc SN.dat 16
+SET "DUT_SN="
+FOR /F "usebackq delims=" %%S IN (`adb get-serialno 2^>nul`) DO SET "DUT_SN=%%S"
+
+REM Retry if no valid serial was returned.
+IF NOT DEFINED DUT_SN GOTO GetDutSN
+IF /I "%DUT_SN%"=="unknown" GOTO GetDutSN
+
+REM Ensure the serial number is exactly 12 characters.
+IF NOT "%DUT_SN:~12%"=="" GOTO GetDutSN
+IF "%DUT_SN:~11,1%"=="" GOTO GetDutSN
+
+ECHO %DUT_SN%>SN.dat
+
+
 IF %ERRORLEVEL% EQU 0 GOTO SetVar
-GOTO ScanSN
+GOTO GetDutSN
 
-:OLDScanSN
-SNAPI-diags.exe -nl -t 5 /SCAN SN.dat 
-SET /a ScanTime+=1
-IF %ScanTime% GTR 5 (
-	DiagPGM\Screen-diag.exe -nl -enter /SS 55 "ScanSN Abnormal <br> Please Check Scanner or Label <br>½ÐÀË¬d±ø½X¨êºj©Î¬OPCBA¼ÐÅÒ¦ì¸m <br>" 0xFFFFFF -bg 0x882222
-	GOTO START
-)
-DiagPGM\PT-diags.exe /fs SN.dat 16
-IF %ERRORLEVEL% NEQ 1 GOTO OLDScanSN
 GOTO SetVar
-
-REM :SCANSN
-REM SET /a SCAN=%SCAN%+1
-REM if %SCAN% gtr 3 goto SCANFAIL
-REM IF EXIST SN.dat DEL SN.dat
-REM DiagPGM\Chopper-diag.exe /SB "^[0-9,A-Z]{%SN_LEN%}$" -EMF sb_msg_SN.msgdat -SFN ..\SN.dat -FS 30 -st "½Ð¿é¤J§Ç¸¹\nPlease Scan Serial Number DUT" -sbsize 800 300
-REM IF %ERRORLEVEL% EQU 0 GOTO setvar
-REM goto SCANSN
-
-REM :SCANFAIL
-REM cd DiagPGM
-REM Screen-diag.exe -nl -enter /spt "SCANFAIL.png"
-REM cd..
-REM SET /a SCAN=0
-REM GOTO SCANSN
 
 :setvar
 REM cd DiagPGM
@@ -118,14 +91,14 @@ net use %on_Drive% \\%SFIS_IP%\%PROJECT% #*c1234 /user:testuser /persistent:yes
 :timesync
 DiagPGM\ping-auto.exe /C %SFIS_IP%
 IF %ERRORLEVEL% EQU 0 GOTO sync
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Connection Error<br> <br>PING SFIS IP:%SFIS_IP% FAILED<br>SFIS³s½u¦³»~,½ÐÀË¬d½u¸ô«á­«¸Õ!" 0xFFFFFF -bg 0x882222
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Connection Error<br> <br>PING SFIS IP:%SFIS_IP% FAILED<br>SFISï¿½sï¿½uï¿½ï¿½ï¿½~,ï¿½ï¿½ï¿½Ë¬dï¿½uï¿½ï¿½ï¿½á­«ï¿½ï¿½!" 0xFFFFFF -bg 0x882222
 GOTO InteruptErr
 
 
 :sync
-tzutil /s "China Standard Time" 
+tzutil /s "China Standard Time"
 net time \\%SFIS_IP% /SET /y
-IF %ERRORLEVEL% NEQ 0 DiagPGM\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>®Õ®É¥¢±Ñ, ½ÐÀË¬d³s½u±¡§Î©Î®Õ®É¥\¯à<br> <br>«ö[Enter]«á­«·s¹Á¸Õ®Õ®É...<br> Press [Enter] to Retry Time Sync..." 0xFFFFFF -bg 0x882222 & GOTO netuse
+IF %ERRORLEVEL% NEQ 0 DiagPGM\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>ï¿½Õ®É¥ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ë¬dï¿½sï¿½uï¿½ï¿½ï¿½Î©Î®Õ®É¥\ï¿½ï¿½<br> <br>ï¿½ï¿½[Enter]ï¿½á­«ï¿½sï¿½ï¿½ï¿½Õ®Õ®ï¿½...<br> Press [Enter] to Retry Time Sync..." 0xFFFFFF -bg 0x882222 & GOTO netuse
 
 
 :GetDeviceID
@@ -142,7 +115,7 @@ IF %ERRORLEVEL% neq 0 GOTO CRfail
 
 :CRfail
 REM Check Route Fail
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Check Route Failure !!<br>½ÐÀË¬d DUT À³´ú¸Õªº¯¸§O !! <br>½Ð¬d¬ÝSFISLOG\YYYYMMDD.log¸ê°T<br>OP: %op% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Check Route Failure !!<br>ï¿½ï¿½ï¿½Ë¬d DUT ï¿½ï¿½ï¿½ï¿½ï¿½Õªï¿½ï¿½ï¿½ï¿½O !! <br>ï¿½Ð¬dï¿½ï¿½SFISLOG\YYYYMMDD.logï¿½ï¿½T<br>OP: %op% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
 GOTO InteruptErr
 
 
@@ -159,9 +132,9 @@ GOTO getconfig
 
 :GTfail
 REM Get TID Fail
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Get TID Failure !!<br>½ÐÀË¬dSFIS½u¸ô !! <br>½Ð¬d¬ÝSFISLOG\YYYYMMDD.log¸ê°T<br>OP: %OP% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Get TID Failure !!<br>ï¿½ï¿½ï¿½Ë¬dSFISï¿½uï¿½ï¿½ !! <br>ï¿½Ð¬dï¿½ï¿½SFISLOG\YYYYMMDD.logï¿½ï¿½T<br>OP: %OP% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
 goto TID_Catch
-   
+
 :Non_TID
 SET tid=
 echo.>tid.dat
@@ -187,7 +160,7 @@ IF "%SFISCONN%" NEQ "True" Call config.bat 1 offline %FOLDER%
 IF "%SFISCONN%" NEQ "True" GOTO NoSFISTid
 GOTO clean
 :NoSFISTid
-rem DiagPGM\Screen-diag.exe -nl -enter /ss 35 "´£¿ô Reminder<br> <br> SFISCONN Setting is not True<br>SFISCONN³]©w¤£¬°True<br> <br> TicketID will show [Debug] <br>TicketID·|Åã¥Ü¬°Debug<br> <br> Press [Enter] to start the test <br>½T»{½Ð«ö[¦^¨®Áä]¶}©l´ú¸Õ " 0xFFFFFF -bg 0xFF7F25
+rem DiagPGM\Screen-diag.exe -nl -enter /ss 35 "ï¿½ï¿½ï¿½ï¿½ Reminder<br> <br> SFISCONN Setting is not True<br>SFISCONNï¿½]ï¿½wï¿½ï¿½ï¿½ï¿½True<br> <br> TicketID will show [Debug] <br>TicketIDï¿½|ï¿½ï¿½Ü¬ï¿½Debug<br> <br> Press [Enter] to start the test <br>ï¿½Tï¿½{ï¿½Ð«ï¿½[ï¿½^ï¿½ï¿½ï¿½ï¿½]ï¿½}ï¿½lï¿½ï¿½ï¿½ï¿½ " 0xFFFFFF -bg 0xFF7F25
 echo Debug>tid.dat
 
 :clean
@@ -254,7 +227,7 @@ find /i "%PROJECT%,N" %CSV_NAME%
 IF %ERRORLEVEL% equ 0 goto ShowFail
 find /i "%PROJECT%,M" %CSV_NAME%
 IF %ERRORLEVEL% equ 0 goto ShowFail
-cls 
+cls
 call Screen-diag.exe -enter /ss 70 "unexpected exit or unknow error code happens." 0xFFFFFF -bg 0xBB2222
 goto START
 
@@ -279,7 +252,7 @@ IF "%MODE%" EQU "D" Tools\CSV-diag.exe /debug %CSV_NAME% & GOTO Backup
 IF "%SFISCONN%" NEQ "True" goto DateCHK
 tzutil /s "China Standard Time"
 net time \\%SFIS_IP% /SET /y
-IF %ERRORLEVEL% NEQ 0 Tools\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>®Õ®É¥¢±Ñ, ½ÐÀË¬d³s½u±¡§Î©Î®Õ®É¥\¯à<br> <br>«ö[Enter]«á­«·s¹Á¸Õ®Õ®É...<br> Press [Enter] to Retry Time Sync..." 0xFFFFFF -bg 0x882222 & GOTO CHKTimeSync
+IF %ERRORLEVEL% NEQ 0 Tools\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>ï¿½Õ®É¥ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ë¬dï¿½sï¿½uï¿½ï¿½ï¿½Î©Î®Õ®É¥\ï¿½ï¿½<br> <br>ï¿½ï¿½[Enter]ï¿½á­«ï¿½sï¿½ï¿½ï¿½Õ®Õ®ï¿½...<br> Press [Enter] to Retry Time Sync..." 0xFFFFFF -bg 0x882222 & GOTO CHKTimeSync
 
 :DateCHK
 Tools\DateChk-auto.exe /FILE %CSV_NAME%
@@ -289,7 +262,7 @@ goto Backup
 :CHKFAIL
 echo %date%_%time% ***(%SN%_%TSRID%)-%CSV_NAME% Time Sync Error,*** >> C:\MFGlog\%TYPE%log\event\_DateChkerror.log
 type DateChk.log >> C:\MFGlog\%TYPE%log\event\_DateChkerror.log
-Tools\Screen-diag.exe -nl -enter /SS 40 "Log Time Error!!<br> <br> Log ®É¶¡®t²§¹L¤j SN:%SN%<br>°O¿ý¤£¤W¶Ç¤£³Æ¥÷ Log Won't Upload or Backup<br> ½Ð½T»{®Õ®É«á­«·s´ú¸Õ Please check time sync and retest. " 0xFFFFFF -bg 0x882222
+Tools\Screen-diag.exe -nl -enter /SS 40 "Log Time Error!!<br> <br> Log ï¿½É¶ï¿½ï¿½tï¿½ï¿½ï¿½Lï¿½j SN:%SN%<br>ï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½Wï¿½Ç¤ï¿½ï¿½Æ¥ï¿½ Log Won't Upload or Backup<br> ï¿½Ð½Tï¿½{ï¿½Õ®É«á­«ï¿½sï¿½ï¿½ï¿½ï¿½ Please check time sync and retest. " 0xFFFFFF -bg 0x882222
 GOTO InteruptErr
 
 :Backup
@@ -311,12 +284,12 @@ del .\MISCLog.zip
 
 rename temp MISCLog
 7z\7za.exe a -tzip .\MISCLog.zip .\MISCLog
-IF NOT EXIST %MISC% MKDIR %MISC%								
+IF NOT EXIST %MISC% MKDIR %MISC%
 copy /y .\MISCLog.zip %MISC%\%SN%_%TSRID%.zip
 
 
 REM TASKKILL /F /IM DB-diag.exe /T
-cd..						  
+cd..
 Tools\LogTransfer-auto.exe -nl -d %Dest% -F %Result% /L %CSV_NAME%
 REM COPY %CSV_NAME% %Dest2%\%sn%_%TSRID%.csv
 IF "%MODE%" EQU "D" GOTO END
@@ -348,7 +321,7 @@ GOTO N_UP
 ECHO %date%_%time%_%SN%_%TSRID% Upload Online Log Failed Error  >>C:\MFGlog\%TYPE%log\event\_UploadError.log
 
 GOTO SFIS_UP
-	
+
 :SFIS_UP
 SET SFISerror=0
 
@@ -395,13 +368,13 @@ IF "%MODE%" EQU "D" GOTO END_TIP
 
 :chk2Aroute
 IF "%Result%" EQU "PASS" GOTO END_TIP
-Start DiagPGM\Screen-diag.exe -enter /SS 55 "ÀË¬dSN %SN% SFIS 2Aª¬ºA¤¤<br>½Ðµ¥«Ý... <br> <br>Checking 2A Status from SFIS<br>Please wait a moment..." 0xFFFFFF -bg 0x223366
+Start DiagPGM\Screen-diag.exe -enter /SS 55 "ï¿½Ë¬dSN %SN% SFIS 2Aï¿½ï¿½ï¿½Aï¿½ï¿½<br>ï¿½Ðµï¿½ï¿½ï¿½... <br> <br>Checking 2A Status from SFIS<br>Please wait a moment..." 0xFFFFFF -bg 0x223366
 DiagPGM\KINGSFIS-Diags.exe -d %deviceID% -op %OP% -SN %SN% /c
-IF %ERRORLEVEL% EQU 0 DiagPGM\Screen-diag.exe -enter /SS 40 "½ÐSN (2A)­«´ú!!<br> <br>Please change another tester to do SN (2A) test!!<br><br>«ö Press [ENTER] to continue Ä~Äò..." 0xFFFFFF -bg 0x773399
+IF %ERRORLEVEL% EQU 0 DiagPGM\Screen-diag.exe -enter /SS 40 "ï¿½ï¿½SN (2A)ï¿½ï¿½ï¿½ï¿½!!<br> <br>Please change another tester to do SN (2A) test!!<br><br>ï¿½ï¿½ Press [ENTER] to continue ï¿½~ï¿½ï¿½..." 0xFFFFFF -bg 0x773399
 taskkill /IM Screen-diag.exe
 GOTO START
 
 
 :END_TIP
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "<br>´ú¸Õµ²§ô<br> <br>«ö°_ªv¨ã¤WBAT PWR«ö¶s¡]«ö¶s¿O·À±¼¡^<br> <br>²¾°£´ú¸Õ®Æ¥ó<br> <br>§ó´«¤U¤@¤ù´ú¸Õ¥D¾÷ªO<br> <br>«ö[ENTER]Ä~Äò..." 0xFFFFFF -bg 0x0000FF
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "<br>ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½<br> <br>ï¿½ï¿½ï¿½_ï¿½vï¿½ï¿½WBAT PWRï¿½ï¿½ï¿½sï¿½]ï¿½ï¿½ï¿½sï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½^<br> <br>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ®Æ¥ï¿½<br> <br>ï¿½ó´«¤Uï¿½@ï¿½ï¿½ï¿½ï¿½ï¿½Õ¥Dï¿½ï¿½ï¿½O<br> <br>ï¿½ï¿½[ENTER]ï¿½~ï¿½ï¿½..." 0xFFFFFF -bg 0x0000FF
 GOTO START

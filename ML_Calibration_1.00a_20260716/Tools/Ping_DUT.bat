@@ -1,17 +1,46 @@
 @echo off
-del C:\DeviceBridgeLogs /f /q
-cd %~dp0..
-set /p IP=<IP.dat
-set tool_path=c:\DiagTool
-SET MISC=C:\MISClog\Debug
-IF EXIST MISClog.dat SET /p MISC=<MISClog.dat
+setlocal EnableExtensions
 
+rem Clean previous DeviceBridge log files.
+if exist "C:\DeviceBridgeLogs\" (
+    del /f /q "C:\DeviceBridgeLogs\*" 2>nul
+)
 
-Tools\ping-auto.exe /P 192.168.1.51 -t 150
+rem Change to the parent directory of this batch file.
+cd /d "%~dp0.."
+if errorlevel 1 (
+    echo ERROR: Failed to change directory.
+    exit /b 1
+)
 
-set /a exitcode=%errorlevel%
+rem Read device IP.
+if not exist "IP.dat" (
+    echo ERROR: IP.dat does not exist.
+    exit /b 2
+)
+set /p "IP="<"IP.dat"
+
+set "tool_path=C:\DiagTool"
+set "MISC=C:\MISClog\Debug"
+
+if exist "MISClog.dat" (
+    set /p "MISC="<"MISClog.dat"
+)
+
+echo Waiting for ADB device...
+adb wait-for-device
+
+rem Save the exit code immediately.
+set "exitcode=%ERRORLEVEL%"
+
+if not "%exitcode%"=="0" (
+    echo ERROR: adb wait-for-device failed.
+    echo Exit code: %exitcode%
+    goto :End
+)
+
+echo ADB device connected successfully.
+echo Exit code: %exitcode%
 
 :End
-rem IF %EXITCODE% NEQ 0 echo reping>reping.dat
-rem IF %EXITCODE% NEQ 0 call Tools\DHCP.bat
-EXIT /B %exitcode%
+endlocal & exit /b %exitcode%
