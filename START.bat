@@ -20,7 +20,7 @@ IF "%DebugXML%" equ "True" SET CFG_NAME=config_Deb.xml
 SET SN_LEN=12
 SET FOLDER=%SUITE_NAME%_%Ver%_%DateVer%
 SET on_Drive=N:
-SET SFIS_IP=172.27.76.10
+SET SFIS_IP=172.24.248.37
 SET Connect=FALSE
 rem CALL DHCP.BAT
 SET /a SCAN=0
@@ -88,10 +88,12 @@ COPY SN.dat DiagPGM\SN.dat
 :netuse
 IF EXIST %on_Drive% GOTO timesync
 net use /delete %on_Drive%
-net use %on_Drive% \\%SFIS_IP%\%PROJECT% #*c1234 /user:testuser /persistent:yes
+rem net use %on_Drive% \\%SFIS_IP%\%PROJECT% #*c1234 /user:testuser /persistent:yes
 
 
 :timesync
+rem skip for now goto sync
+goto sync
 DiagPGM\ping-auto.exe /C %SFIS_IP%
 IF %ERRORLEVEL% EQU 0 GOTO sync
 DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Connection Error<br> <br>PING SFIS IP:%SFIS_IP% FAILED<br>SFIS connection failed. Please check the network and retry!" 0xFFFFFF -bg 0x882222

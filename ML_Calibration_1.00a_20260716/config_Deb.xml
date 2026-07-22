@@ -8,7 +8,7 @@
 		</ErrorTransform>
 	</Test>
 	<Test Name="Pre_Process" Variation="ML" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
-		<Exec PreWait="0" Wait="3.0" Retry="1" Ask4Retry="False" File="Tools\pre_process.bat " Action="&quot;run_pre_process.bat&quot; &quot;C:\MISC&quot;" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+		<Exec PreWait="0" Wait="3.0" Retry="1" Ask4Retry="False" File="Tools\pre_process.bat " Action="&quot;C:\Users\TEST\Desktop\glasses_scripts\pre_post&quot; &quot;C:\MISClog&quot;" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
 		<ErrorTransform>
 			<Replace Source="0" To="0" PEGA="" String="Success" />
 			<Replace Source="FB" To="8F042281" PEGA="NM100065015" String="!- TypeC_CHECK -! Type C tester device not found." />
