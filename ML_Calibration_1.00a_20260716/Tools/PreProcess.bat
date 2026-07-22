@@ -1,59 +1,116 @@
-cd %~dp0..
-IF NOT EXIST Tools\Diagtool\record.wav EXIT /B 255
-SET MISC=C:\MISClog\Debug
-IF EXIST MISClog.dat SET /p MISC=<MISClog.dat
-SET TestItem=%1_%2
-SET Log=%1Log_%2.log
-IF EXIST sn.dat SET /p SN=<sn.dat
-IF EXIST TSRID.dat SET /p TSRID=<TSRID.dat
+@echo off
+setlocal EnableExtensions EnableDelayedExpansion
 
+if "%~3" == "" goto :usage
 
-if %1 EQU FREQ goto FREQ
-if %1 EQU dB goto dB
-if %1 EQU THD goto THD
+set "PRE_PROCESS_BAT=%~1"
+set "OPERATION=%~2"
+set "TEST_NUMBER=%~3"
+set "BACKUP_ROOT=%~4"
+set "SOURCE_DIR=%~5"
 
+if "!TEST_NUMBER:~0,1!" == "#" set "TEST_NUMBER=!TEST_NUMBER:~1!"
 
+if not exist "!PRE_PROCESS_BAT!" (
+  echo ERROR: Pre-process batch file not found: "!PRE_PROCESS_BAT!"
+  exit /b 2
+)
 
-:FREQ
-rem IF EXIST AudioLog_S?.log DEL AudioLog_S?.log
-Tools\Diagtool\KrownAudio-Diags.exe -nl -f Tools\Diagtool\record.wav -fr %3 %4 /g > %1Log_%2.log
-Tools\PT-diags.exe /gv %1Log_%2.log "Left Frequency = " %3 %4
-if %errorlevel% neq 0 goto FAIL
-goto PASS
+set "ADB_DEVICES_FILE=%TEMP%\robocal_adb_devices_%RANDOM%_%RANDOM%.tmp"
+call adb devices >"!ADB_DEVICES_FILE!"
+if errorlevel 1 (
+  echo ERROR: Failed to run adb devices.
+  del /q "!ADB_DEVICES_FILE!" 2>nul
+  exit /b 3
+)
 
-:dB
-rem if "%1" EQU "L" IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
-Tools\Diagtool\KrownAudio-Diags.exe -nl -f Tools\Diagtool\record.wav -db %3 %4 /g > %1Log_%2.log
-Tools\PT-diags.exe /gv %1Log_%2.log "Left dB = " %3 %4
-rem if "%1" EQU "R" EXIT /B %ERRORLEVEL%
-if %errorlevel% neq 0 goto FAIL
-goto PASS
+set "SERIAL="
+set /a DEVICE_COUNT=0
+for /f "usebackq skip=1 tokens=1,2" %%A in ("!ADB_DEVICES_FILE!") do (
+  if "%%B" == "device" (
+    set /a DEVICE_COUNT+=1
+    set "SERIAL=%%A"
+  )
+)
+del /q "!ADB_DEVICES_FILE!" 2>nul
 
-:THD
-rem if "%1" EQU "L" IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
-Tools\Diagtool\KrownAudio-Diags.exe -nl -f Tools\Diagtool\record.wav -thdd %3 %4 /g > %1Log_%2.log
-Tools\PT-diags.exe /gv %1Log_%2.log "Left THD = " %3 %4
-rem if "%1" EQU "R" EXIT /B %ERRORLEVEL%
-if %errorlevel% neq 0 goto FAIL
+if not "!DEVICE_COUNT!" == "1" (
+  echo ERROR: Expected exactly one connected ADB device, found !DEVICE_COUNT!.
+  echo Check adb devices and ensure the device state is device.
+  exit /b 4
+)
 
-:PASS
-set EXITCODE=%errorlevel%
-set EXIT_PF=PASS
-echo %EXITCODE%
-goto backup
+echo ADB serial: !SERIAL!
 
-:FAIL
-set EXITCODE=%errorlevel%
-set EXIT_PF=FAIL
-echo %EXITCODE%
+if not defined BACKUP_ROOT (
+  for /f "usebackq delims=" %%D in (`powershell.exe -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"`) do set "BACKUP_ROOT=%%D\RoboGRR"
+)
 
+if not defined SOURCE_DIR (
+  set "SOURCE_DIR=C:\Users\TEST\Desktop\logs\robocal_output"
+)
 
-:backup
-rem IF NOT EXIST %Log% GOTO END
-Tools\LogTransfer-auto.exe -nl /de -
-call setdate.bat
-SET DEST=%TestItem%\%datepath%\%EXIT_PF%\
-IF NOT EXIST %MISC%\%DEST% MKDIR %MISC%\%DEST%
-rem Copy %Log% %MISC%\%DEST%\%SN%_%TSRID%_%TestItem%_%EXIT_PF%_%4_%3.log
-Copy %Log% %MISC%\%DEST%\%SN%_%TSRID%_%TestItem%_%EXIT_PF%.log
-exit /b %EXITCODE%
+set "RUN_MARKER=%TEMP%\robocal_pre_process_%RANDOM%_%RANDOM%.tmp"
+type nul >"!RUN_MARKER!"
+if errorlevel 1 (
+  echo ERROR: Could not create run marker "!RUN_MARKER!".
+  exit /b 5
+)
+
+echo Running pre-process: "!PRE_PROCESS_BAT!"
+call "!PRE_PROCESS_BAT!"
+set "PRE_PROCESS_EXITCODE=!ERRORLEVEL!"
+
+set "SOURCE_LOG="
+if exist "!SOURCE_DIR!" (
+  for /f "usebackq delims=" %%F in (`powershell.exe -NoProfile -Command "$marker = (Get-Item -LiteralPath $env:RUN_MARKER).LastWriteTimeUtc; $latest = $null; foreach ($file in Get-ChildItem -LiteralPath $env:SOURCE_DIR -Filter 'log_file_*.log' -File) { if ($file.LastWriteTimeUtc -ge $marker -and ($null -eq $latest -or $file.LastWriteTimeUtc -gt $latest.LastWriteTimeUtc)) { $latest = $file } }; if ($null -ne $latest) { $latest.FullName }"`) do set "SOURCE_LOG=%%F"
+)
+
+del /q "!RUN_MARKER!" 2>nul
+
+if not defined SOURCE_LOG (
+  echo ERROR: No new pre-process log was found at "!SOURCE_DIR!".
+  echo Pre-process exit code: !PRE_PROCESS_EXITCODE!
+  exit /b 6
+)
+
+set "DESTINATION_DIR=!BACKUP_ROOT!\!SERIAL!\!OPERATION!\#!TEST_NUMBER!\Pre"
+for %%F in ("!SOURCE_LOG!") do set "LOG_NAME=%%~nxF"
+set "DESTINATION_LOG=!DESTINATION_DIR!\!LOG_NAME!"
+
+if exist "!DESTINATION_LOG!" (
+  echo ERROR: Destination already exists: "!DESTINATION_LOG!"
+  exit /b 7
+)
+
+mkdir "!DESTINATION_DIR!" 2>nul
+if errorlevel 1 (
+  echo ERROR: Could not create "!DESTINATION_DIR!".
+  exit /b 8
+)
+
+copy /b /y "!SOURCE_LOG!" "!DESTINATION_LOG!" >nul
+if errorlevel 1 (
+  echo ERROR: Failed to copy "!SOURCE_LOG!".
+  exit /b 9
+)
+
+echo Pre-process log backed up successfully.
+echo Source:      !SOURCE_LOG!
+echo Destination: !DESTINATION_LOG!
+echo Pre-process exit code: !PRE_PROCESS_EXITCODE!
+exit /b !PRE_PROCESS_EXITCODE!
+
+:usage
+echo Usage: %~nx0 PRE_PROCESS_BAT OP TEST_NUMBER [BACKUP_ROOT] [SOURCE_DIR]
+echo.
+echo PRE_PROCESS_BAT is the full path to the batch file that runs pre_process.
+echo SERIAL is detected automatically from adb devices. Exactly one device
+echo must be connected with the state device.
+echo If BACKUP_ROOT is omitted, Desktop\RoboGRR is used.
+echo If SOURCE_DIR is omitted, this TEST user directory is used:
+echo C:\Users\TEST\Desktop\logs\robocal_output
+echo.
+echo Example:
+echo %~nx0 "C:\TestTools\run_pre_process.bat" OP1 1
+exit /b 1
