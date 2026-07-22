@@ -38,11 +38,14 @@ IF EXIST PN.log DEL PN.log
 IF EXIST PN.txt DEL PN.txt
 IF EXIST op.dat GOTO SCANSN
 
-DiagPGM\Chopper-diag.exe /SB "^[Ss][0-9]{2}[0-9,AaBbCc][0-9]{5}$" -SIF op.jpg -EMF sb_msg_OP.msgdat -SFN ..\OP.dat -FS 30 -st "�п�J�u��\nPlease Enter Operator Number" -sbsize 800 300
+DiagPGM\Chopper-diag.exe /SB "^[Ss][0-9]{2}[0-9,AaBbCc][0-9]{5}$" -SIF op.jpg -EMF sb_msg_OP.msgdat -SFN ..\OP.dat -FS 30 -st "Please scan operator number\nPlease Enter Operator Number" -sbsize 800 300
 IF %ERRORLEVEL% NEQ 0 GOTO START_OP
 
 :START
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "<br>���U�v��WBAT PWR���s�A����2���Z<br> <br> ���UPWR BTN���s2s<br> <br>��Enter���~��" 0xFFFFFF -bg 0x223366
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "<br>Please connect the device.<br> <br>Press [Enter] to start the test." 0xFFFFFF -bg 0x223366
+
+adb get-state 2>nul | findstr /X /C:"device" >nul
+IF %ERRORLEVEL% NEQ 0 GOTO START
 
 SET ScanTime=0
 
@@ -91,14 +94,14 @@ net use %on_Drive% \\%SFIS_IP%\%PROJECT% #*c1234 /user:testuser /persistent:yes
 :timesync
 DiagPGM\ping-auto.exe /C %SFIS_IP%
 IF %ERRORLEVEL% EQU 0 GOTO sync
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Connection Error<br> <br>PING SFIS IP:%SFIS_IP% FAILED<br>SFIS�s�u���~,���ˬd�u���᭫��!" 0xFFFFFF -bg 0x882222
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Connection Error<br> <br>PING SFIS IP:%SFIS_IP% FAILED<br>SFIS connection failed. Please check the network and retry!" 0xFFFFFF -bg 0x882222
 GOTO InteruptErr
 
 
 :sync
 tzutil /s "China Standard Time"
 net time \\%SFIS_IP% /SET /y
-IF %ERRORLEVEL% NEQ 0 DiagPGM\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>�ծɥ���, ���ˬd�s�u���Ωήծɥ\��<br> <br>��[Enter]�᭫�s���ծծ�...<br> Press [Enter] to Retry Time Sync..." 0xFFFFFF -bg 0x882222 & GOTO netuse
+IF %ERRORLEVEL% NEQ 0 DiagPGM\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>Please check the network connection or time sync setting.<br> <br>Press [Enter] to retry time sync..." 0xFFFFFF -bg 0x882222 & GOTO netuse
 
 
 :GetDeviceID
@@ -115,7 +118,7 @@ IF %ERRORLEVEL% neq 0 GOTO CRfail
 
 :CRfail
 REM Check Route Fail
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Check Route Failure !!<br>���ˬd DUT �����ժ����O !! <br>�Ьd��SFISLOG\YYYYMMDD.log��T<br>OP: %op% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Check Route Failure !!<br>Please check DUT route status !! <br>See SFISLOG\YYYYMMDD.log for details.<br>OP: %op% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
 GOTO InteruptErr
 
 
@@ -132,7 +135,7 @@ GOTO getconfig
 
 :GTfail
 REM Get TID Fail
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Get TID Failure !!<br>���ˬdSFIS�u�� !! <br>�Ьd��SFISLOG\YYYYMMDD.log��T<br>OP: %OP% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Get TID Failure !!<br>Please check the SFIS system !! <br>See SFISLOG\YYYYMMDD.log for details.<br>OP: %OP% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
 goto TID_Catch
 
 :Non_TID
@@ -160,7 +163,7 @@ IF "%SFISCONN%" NEQ "True" Call config.bat 1 offline %FOLDER%
 IF "%SFISCONN%" NEQ "True" GOTO NoSFISTid
 GOTO clean
 :NoSFISTid
-rem DiagPGM\Screen-diag.exe -nl -enter /ss 35 "���� Reminder<br> <br> SFISCONN Setting is not True<br>SFISCONN�]�w����True<br> <br> TicketID will show [Debug] <br>TicketID�|��ܬ�Debug<br> <br> Press [Enter] to start the test <br>�T�{�Ы�[�^����]�}�l���� " 0xFFFFFF -bg 0xFF7F25
+rem DiagPGM\Screen-diag.exe -nl -enter /ss 35 "Reminder<br> <br> SFISCONN Setting is not True<br>SFISCONN must be set to True<br> <br> TicketID will show [Debug] <br>TicketID will display Debug<br> <br> Press [Enter] to start the test <br>Please confirm and press Enter to continue." 0xFFFFFF -bg 0xFF7F25
 echo Debug>tid.dat
 
 :clean
@@ -252,7 +255,7 @@ IF "%MODE%" EQU "D" Tools\CSV-diag.exe /debug %CSV_NAME% & GOTO Backup
 IF "%SFISCONN%" NEQ "True" goto DateCHK
 tzutil /s "China Standard Time"
 net time \\%SFIS_IP% /SET /y
-IF %ERRORLEVEL% NEQ 0 Tools\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>�ծɥ���, ���ˬd�s�u���Ωήծɥ\��<br> <br>��[Enter]�᭫�s���ծծ�...<br> Press [Enter] to Retry Time Sync..." 0xFFFFFF -bg 0x882222 & GOTO CHKTimeSync
+IF %ERRORLEVEL% NEQ 0 Tools\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>Please check the network connection or time sync setting.<br> <br>Press [Enter] to retry time sync..." 0xFFFFFF -bg 0x882222 & GOTO CHKTimeSync
 
 :DateCHK
 Tools\DateChk-auto.exe /FILE %CSV_NAME%
@@ -262,7 +265,7 @@ goto Backup
 :CHKFAIL
 echo %date%_%time% ***(%SN%_%TSRID%)-%CSV_NAME% Time Sync Error,*** >> C:\MFGlog\%TYPE%log\event\_DateChkerror.log
 type DateChk.log >> C:\MFGlog\%TYPE%log\event\_DateChkerror.log
-Tools\Screen-diag.exe -nl -enter /SS 40 "Log Time Error!!<br> <br> Log �ɶ��t���L�j SN:%SN%<br>�O�����W�Ǥ��ƥ� Log Won't Upload or Backup<br> �нT�{�ծɫ᭫�s���� Please check time sync and retest. " 0xFFFFFF -bg 0x882222
+Tools\Screen-diag.exe -nl -enter /SS 40 "Log Time Error!!<br> <br> Log time is out of sync for SN:%SN%<br>This log will not upload or back up.<br> Please check time sync and retest." 0xFFFFFF -bg 0x882222
 GOTO InteruptErr
 
 :Backup
@@ -368,13 +371,13 @@ IF "%MODE%" EQU "D" GOTO END_TIP
 
 :chk2Aroute
 IF "%Result%" EQU "PASS" GOTO END_TIP
-Start DiagPGM\Screen-diag.exe -enter /SS 55 "�ˬdSN %SN% SFIS 2A���A��<br>�е���... <br> <br>Checking 2A Status from SFIS<br>Please wait a moment..." 0xFFFFFF -bg 0x223366
+Start DiagPGM\Screen-diag.exe -enter /SS 55 "Checking SN %SN% SFIS 2A status<br>Please wait... <br> <br>Checking 2A Status from SFIS<br>Please wait a moment..." 0xFFFFFF -bg 0x223366
 DiagPGM\KINGSFIS-Diags.exe -d %deviceID% -op %OP% -SN %SN% /c
-IF %ERRORLEVEL% EQU 0 DiagPGM\Screen-diag.exe -enter /SS 40 "��SN (2A)����!!<br> <br>Please change another tester to do SN (2A) test!!<br><br>�� Press [ENTER] to continue �~��..." 0xFFFFFF -bg 0x773399
+IF %ERRORLEVEL% EQU 0 DiagPGM\Screen-diag.exe -enter /SS 40 "SN (2A) not allowed!!<br> <br>Please change another tester to do SN (2A) test!!<br><br>Press [ENTER] to continue..." 0xFFFFFF -bg 0x773399
 taskkill /IM Screen-diag.exe
 GOTO START
 
 
 :END_TIP
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "<br>���յ���<br> <br>���_�v��WBAT PWR���s�]���s�O�����^<br> <br>�������ծƥ�<br> <br>�󴫤U�@�����եD���O<br> <br>��[ENTER]�~��..." 0xFFFFFF -bg 0x0000FF
+DiagPGM\Screen-diag.exe -nl -enter /SS 55 "<br>Testing complete.<br> <br>Release the WBAT PWR button and verify it is restored.<br> <br>Prepare the next test item.<br> <br>Replace the jig main power switch.<br> <br>Press [ENTER] to exit..." 0xFFFFFF -bg 0x0000FF
 GOTO START
