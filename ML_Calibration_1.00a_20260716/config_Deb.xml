@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Diagnostic Project="Shawville_MockUp" Station="PCBA_MockUp" Version="1.00a" ProductionTest="True">
+<Diagnostic Project="ML_Calibration" Station="PCBA_MockUp" Version="1.00a" ProductionTest="True">
 	<Test Name="Boot Status Check" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
 		<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\Ping_DUT.bat" Action="" ShowTerminal="True" FailStop="True" Rebase="False" Log="" />
 		<ErrorTransform>

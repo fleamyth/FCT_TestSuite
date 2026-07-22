@@ -1,5 +1,5 @@
 @echo off
-Title Shawville_MockUp_Debug_Mode
+Title ML_Calibration_Debug_Mode
 SET DebugXML=True
 SET SFISCONN=Tru
 SET FIXCTL=Tru

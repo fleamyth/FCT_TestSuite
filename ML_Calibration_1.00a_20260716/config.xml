@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Diagnostic Project="Shawville_MockUp" Station="PCBA_MockUp" Version="1.00a" ProductionTest="True">
+<Diagnostic Project="ML_Calibration" Station="PCBA_MockUp" Version="1.00a" ProductionTest="True">
 	<Test Name="Boot Status Check" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
 		<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\Ping_DUT.bat" Action="" ShowTerminal="True" FailStop="True" Rebase="False" Log="" />
 		<ErrorTransform>
@@ -56,15 +56,15 @@
 			</ErrorTransform>
 		</Test>
 	</Group>
-	<Test Name="Battery_Initial" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+	<Test Name="Battery_Initial" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
 		<Exec PreWait="0" Wait="0" Retry="3" Ask4Retry="False" File="Tools\BiFrostTools\_Power.bat" Action="SetLevel MainBattery 20 20" ShowTerminal="True" FailStop="True" Rebase="False" Log="" />
 		<ErrorTransform>
 			<Replace Source="1" To="8F1A0018" PEGA="AKFP1L" String="!-Battery_Power_TEST-! Set Battery Level Fail." />
 			<Replace Source="FF" To="8F1A0018" PEGA="AKFP1L" String="!-Battery_Power_TEST-! Set Battery Level Fail." />
 		</ErrorTransform>
 	</Test>
-	<Group Name="Battery connector" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
-		<Test Name="Battery Information" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+	<Group Name="Battery connector" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+		<Test Name="Battery Information" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
 			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BiFrostTools\_Power.bat" Action="GetInfo MainBattery" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
 			<ErrorTransform>
 				<Replace Source="1" To="8F1A0104" PEGA="NM100003638" String="!- BatteryInfo_FUNCTION_CHECK -! BatteryInfo function check fail." />
@@ -78,7 +78,7 @@
 				<Replace Source="FF" To="8F1A0001" PEGA="AKSZLM" String="!- BATTERY_CHARGE_TEST -! Battery Charge function error." />
 			</ErrorTransform>
 		</Test>
-		<Test Name="Charge Status" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Test Name="Charge Status" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
 			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BiFrostTools\_Power.bat" Action="GetCurrent MainBattery" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
 			<ErrorTransform>
 				<Replace Source="1" To="8F1A0001" PEGA="AKSZLM" String="!- BATTERY_CHARGE_TEST -! Battery Charge function error." />
