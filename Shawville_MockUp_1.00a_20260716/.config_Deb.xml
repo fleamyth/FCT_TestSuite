@@ -1,0 +1,302 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Diagnostic Project="Shawville_MockUp" Station="PCBA_MockUp" Version="1.00a" ProductionTest="True">
+	<Test Name="Boot Status Check" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\Ping_DUT.bat" Action="" ShowTerminal="True" FailStop="True" Rebase="False" Log="" />
+		<ErrorTransform>
+			<Replace Source="1" To="8F000003" PEGA="AKFI19" String="!- LAN_TEST -! Could not ping DUT" />
+			<Replace Source="FF" To="8F000003" PEGA="AKFI19" String="!- LAN_TEST -! Could not ping DUT" />
+		</ErrorTransform>
+	</Test>
+	<Group Name="LANRS" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Test Name="Check Bifrost Health system module" Variation="Shawville" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="3" Check="True">
+			<Exec PreWait="0" Wait="2.0" Retry="50" Ask4Retry="False" File="Tools\BiFrostTools\_System.bat" Action="HealthCheck" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F11A66F" PEGA="AKETC2" String="!- DEVICEBRIDGE_CONNECT -! Device Bridge unable to connect." />
+			</ErrorTransform>
+		</Test>
+		<Test Name="LANRS Server Check" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="5" Retry="5" Ask4Retry="False" File="Tools\LANRS-Diags.exe" Action="/RCF -ip 192.168.1.51 -rf &quot;E:\Diags.KEY&quot; -w -e 0 -timeout 10" ShowTerminal="True" FailStop="True" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="1" To="8F00002A" PEGA="AKFGT4" String="!- LANRS server fail -! Could not ping LANRS server of DUT" />
+				<Replace Source="FF" To="8F00002A" PEGA="AKFGT4" String="!- LANRS server fail -! Could not ping LANRS server of DUT" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Update New Tools To DUT" Variation="Shawville" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="2.0" Wait="0" Retry="1" Ask4Retry="False" File="Tools\Update.bat" Action="" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F1C0007" PEGA="AKGFIC" String="!- LAN_TEST -! Could not Update tools to DUT" />
+			</ErrorTransform>
+		</Test>
+	</Group>
+	<Group Name="USB_TypeC" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Test Name="TypeC Test With TBT01Tester" Variation="Shawville" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="3.0" Retry="1" Ask4Retry="False" File="Tools\_TypeCtester.bat" Action="" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FB" To="8F042281" PEGA="NM100065015" String="!- TypeC_CHECK -! Type C tester device not found." />
+				<Replace Source="FC" To="8F042280" PEGA="NM100065014" String="!- TypeC_CHECK -! Type C tester LOG files not found." />
+				<Replace Source="FD" To="8F041223" PEGA="EM100032968" String="!- U3PE -! USB-C Side Port 1 failed to connect and enumerate" />
+				<Replace Source="FE" To="8F041224" PEGA="EM100032969" String="!- U3PE -! USB-C Side Port 2 failed to connect and enumerate" />
+				<Replace Source="FF" To="8F042250" PEGA="AKGFWV" String="!- TypeC_CHECK -! Type C USB 3.0 funtion Fail." />
+				<Replace Source="*" To="8F042250" PEGA="AKGFWV" String="!- TypeC_CHECK -! Type C USB 3.0 funtion Fail." />
+			</ErrorTransform>
+		</Test>
+		<Test Name="TypeC Test With TBT01Tester Port1" Variation="Shawville" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="3.0" Retry="1" Ask4Retry="False" File="Tools\_TypeCtester1.bat" Action="" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FB" To="8F042281" PEGA="NM100065015" String="!- TypeC_CHECK -! Type C tester device not found." />
+				<Replace Source="FC" To="8F042280" PEGA="NM100065014" String="!- TypeC_CHECK -! Type C tester LOG files not found." />
+				<Replace Source="FD" To="8F041223" PEGA="EM100032968" String="!- U3PE -! USB-C Side Port 1 failed to connect and enumerate" />
+				<Replace Source="FE" To="8F041224" PEGA="EM100032969" String="!- U3PE -! USB-C Side Port 2 failed to connect and enumerate" />
+				<Replace Source="FF" To="8F042250" PEGA="AKGFWV" String="!- TypeC_CHECK -! Type C USB 3.0 funtion Fail." />
+				<Replace Source="*" To="8F042250" PEGA="AKGFWV" String="!- TypeC_CHECK -! Type C USB 3.0 funtion Fail." />
+			</ErrorTransform>
+		</Test>
+	</Group>
+	<Test Name="Battery_Initial" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Exec PreWait="0" Wait="0" Retry="3" Ask4Retry="False" File="Tools\BiFrostTools\_Power.bat" Action="SetLevel MainBattery 20 20" ShowTerminal="True" FailStop="True" Rebase="False" Log="" />
+		<ErrorTransform>
+			<Replace Source="1" To="8F1A0018" PEGA="AKFP1L" String="!-Battery_Power_TEST-! Set Battery Level Fail." />
+			<Replace Source="FF" To="8F1A0018" PEGA="AKFP1L" String="!-Battery_Power_TEST-! Set Battery Level Fail." />
+		</ErrorTransform>
+	</Test>
+	<Group Name="Battery connector" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Test Name="Battery Information" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BiFrostTools\_Power.bat" Action="GetInfo MainBattery" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="1" To="8F1A0104" PEGA="NM100003638" String="!- BatteryInfo_FUNCTION_CHECK -! BatteryInfo function check fail." />
+				<Replace Source="FF" To="8F1A0104" PEGA="NM100003638" String="!- BatteryInfo_FUNCTION_CHECK -! BatteryInfo function check fail." />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Charge Status" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BiFrostTools\_Power.bat" Action="GetInfo MainBattery ChargingCheck" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="1" To="8F1A0001" PEGA="AKSZLM" String="!- BATTERY_CHARGE_TEST -! Battery Charge function error." />
+				<Replace Source="FF" To="8F1A0001" PEGA="AKSZLM" String="!- BATTERY_CHARGE_TEST -! Battery Charge function error." />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Charge Status" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BiFrostTools\_Power.bat" Action="GetCurrent MainBattery" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="1" To="8F1A0001" PEGA="AKSZLM" String="!- BATTERY_CHARGE_TEST -! Battery Charge function error." />
+				<Replace Source="FF" To="8F1A0001" PEGA="AKSZLM" String="!- BATTERY_CHARGE_TEST -! Battery Charge function error." />
+			</ErrorTransform>
+		</Test>
+	</Group>
+	<Group Name="Speaker" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Test Name="Speaker_Audio Record Test Left Side 1K" Variation="Shawville" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="1" Ask4Retry="False" File="Tools\_Audio_DMIC_L_LANRS.bat" Action="" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FE" To="8F000030" PEGA="AKFHWL" String="!-LAN_FAIL-! File transfer failure" />
+				<Replace Source="FF" To="8F070103" PEGA="AKFH0C" String="!- Audio_SPEAKER_TEST -! Left SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Speaker_Audio Record Test Right Side 1K" Variation="Shawville" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\_Audio_DMIC_R_LANRS.bat" Action="" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FE" To="8F000030" PEGA="AKFHWL" String="!-LAN_FAIL-! File transfer failure" />
+				<Replace Source="FF" To="8F070104" PEGA="AKFH0D" String="!- Audio_SPEAKER_TEST -! Right SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Config Info Transfer From Dut" Variation="Shawville" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="2.0" Wait="0" Retry="2" Ask4Retry="False" File="Tools\LANRS-Diags.exe" Action="/QD -ip 192.168.1.51 -rf &quot;E:\Diags\Jalama\Tools\Temp&quot; -to &quot;.\Tools&quot; -w" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F000030" PEGA="AKFHWL" String="!-LAN_FAIL-! File transfer failure" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Record Speaker Audio Left DB" Variation="Shawville" MeasureName="DB" Min="-35" Max="3" Unit="" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\PT-diags.exe" Action="/find .\Tools\Temp\dmic_audio_L.txt &quot;dB&quot;" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<GetValue File=".\Tools\Temp\DMIC_Audio_L_DB.txt" Row="0" Col="0" Len="20" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F070103" PEGA="AKFH0C" String="!- Audio_SPEAKER_TEST -! Left SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Record Speaker Audio Left THD" Variation="Shawville" MeasureName="Thd" Min="0" Max="10" Unit="%" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\PT-diags.exe" Action="/find .\Tools\Temp\dmic_audio_L.txt &quot;THD&quot;" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<GetValue File=".\Tools\Temp\DMIC_Audio_L_THD.txt" Row="0" Col="0" Len="4" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F070103" PEGA="AKFH0C" String="!- Audio_SPEAKER_TEST -! Left SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Record Speaker Audio Left Frequency" Variation="Shawville" MeasureName="Frequency" Min="900" Max="1100" Unit="Hz" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\PT-diags.exe" Action="/find .\Tools\Temp\dmic_audio_L.txt &quot;Freq&quot;" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<GetValue File=".\Tools\Temp\DMIC_Audio_L_Freq.txt" Row="0" Col="0" Len="20" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F070103" PEGA="AKFH0C" String="!- Audio_SPEAKER_TEST -! Left SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Record Audio Right DB" Variation="Shawville" MeasureName="DB" Min="-35" Max="3" Unit="" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\PT-diags.exe" Action="/find .\Tools\Temp\dmic_audio_R.txt &quot;dB&quot;" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<GetValue File=".\Tools\Temp\DMIC_Audio_R_DB.txt" Row="0" Col="0" Len="20" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F070104" PEGA="AKFH0D" String="!- Audio_SPEAKER_TEST -! Right SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Record Audio Right THD" Variation="Shawville" MeasureName="Thd" Min="0" Max="15" Unit="%" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\PT-diags.exe" Action="/find .\Tools\Temp\dmic_audio_R.txt &quot;THD&quot;" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<GetValue File=".\Tools\Temp\DMIC_Audio_R_THD.txt" Row="0" Col="0" Len="4" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F070104" PEGA="AKFH0D" String="!- Audio_SPEAKER_TEST -! Right SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Record Audio Right Frequency" Variation="Shawville" MeasureName="Frequency" Min="900" Max="1100" Unit="Hz" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\PT-diags.exe" Action="/find .\Tools\Temp\dmic_audio_R.txt &quot;Freq&quot;" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<GetValue File=".\Tools\Temp\DMIC_Audio_R_Freq.txt" Row="0" Col="0" Len="20" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F070104" PEGA="AKFH0D" String="!- Audio_SPEAKER_TEST -! Right SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+	</Group>
+	<Group Name="Speaker1" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+		<Test Name="Speaker_Play_2KHz_Record_L" Variation="Shawville" Class="Speaker" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\DeviceBridge\Audio_DB-diag.bat" Action="L 2000 2 2 5 0.03" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="1" To="8F070101" PEGA="AKFH03" String="!- Audio_SPEAKER_TEST -! SPEAKER test fail" />
+				<Replace Source="FF" To="8F070101" PEGA="AKFH03" String="!- Audio_SPEAKER_TEST -! SPEAKER test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Speaker_Play_2KHz_Record_R" Variation="Shawville" Class="Speaker" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\DeviceBridge\Audio_DB-diag.bat" Action="R 2000 2 2 5 0.03" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="1" To="8F070101" PEGA="AKFH03" String="!- Audio_SPEAKER_TEST -! SPEAKER test fail" />
+				<Replace Source="FF" To="8F070101" PEGA="AKFH03" String="!- Audio_SPEAKER_TEST -! SPEAKER test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Speaker_2KHz_LeftChannel_dB_Analyze" Variation="Shawville" MeasureName="Speaker_Right_LeftC_dB" Min="-90" Max="0" Unit="dB" Class="Speaker" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0.6" Wait="0" Retry="0" Ask4Retry="False" File="Tools\DeviceBridge\AudioAnalyzer.bat" Action="Speakers_L DUT_MIC_Port_record_L.wav {min} {max} 2000 Audio_mic_left_db.log" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<GetValue File="Tools\DeviceBridge\db.log" Row="0" Col="0" Len="15" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="1" To="8F070229" PEGA="AKFBQD" String="!- Audio_SPEAKER_TEST -! Right SPEAKER to DMIC Left Channel test DB value {value::{Value}}({Unit}) lower than limit {limit::{Min}} ({Unit})" />
+				<Replace Source="2" To="8F070230" PEGA="AKFBQE" String="!- Audio_SPEAKER_TEST -! Right SPEAKER to DMIC Left Channel test DB value {value::{Value}}({Unit}) greater than limit {limit::{Max}} ({Unit})" />
+				<Replace Source="FF" To="8F070104" PEGA="AKFH0D" String="!- Audio_SPEAKER_TEST -! Right SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Speaker_2KHz_RightChannel_dB_Analyze" Variation="Shawville" MeasureName="Speaker_Right_RightC_dB" Min="-90" Max="0" Unit="dB" Class="Speaker" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0.6" Wait="0" Retry="0" Ask4Retry="False" File="Tools\DeviceBridge\AudioAnalyzer.bat" Action="Speakers_R DUT_MIC_Port_record_R.wav {min} {max} 2000  Audio_mic_Right_db.log" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<GetValue File="Tools\DeviceBridge\db.log" Row="0" Col="0" Len="15" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="1" To="8F070231" PEGA="AKFBQF" String="!- Audio_SPEAKER_TEST -! Right SPEAKER to DMIC Right Channel test DB value {value::{Value}}({Unit}) lower than limit {limit::{Min}} ({Unit})" />
+				<Replace Source="2" To="8F070232" PEGA="AKFBQG" String="!- Audio_SPEAKER_TEST -! Right SPEAKER to DMIC Right Channel test DB value {value::{Value}}({Unit}) greater than limit {limit::{Max}} ({Unit})" />
+				<Replace Source="FF" To="8F070104" PEGA="AKFH0D" String="!- Audio_SPEAKER_TEST -! Right SPEAKER or DMIC test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Speaker_Mic_Right_And_Left_Channel_dB_Diff" Variation="Shawville" MeasureName="Spk_Mic_R_L_Channel_Diff" Min="0.01" Max="" Unit="dB" Class="Speaker" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0.6" Wait="0" Retry="0" Ask4Retry="False" File="Tools\DeviceBridge\Audio_Mic_Diff.bat" Action="" ShowTerminal="False" FailStop="True" Rebase="False" Log="" />
+			<GetValue File="Tools\DeviceBridge\Audio_Mic_RL_Diff.log" Row="3" Col="0" Len="6" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F070246" PEGA="AKWQZQ" String="!-Audio_SPEAKER_TEST-! Compare the left and right microphone's test results fail, that difference is less than {value::{Value}}({Unit})" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Speaker_Delete_Files" Variation="Shawville" Class="Speaker" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="C:\Windows\System32\cmd.exe" Action="/c &quot;DEL Tools\DeviceBridge\AudioLoopBack_*.log Tools\DeviceBridge\*.wav&quot;" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="*" To="0" PEGA="" String="Success" />
+			</ErrorTransform>
+		</Test>
+	</Group>
+	<Group Name="switch board connector" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Test Name="Check Volume Down Button" Variation="Shawville" Class="NI" Front="False" Loop="1" Mode="Parallel" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BUTTON_TEST.bat" Action="Down vd" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F170002" PEGA="AKFI36" String="!- Button_CHECK -! Volume down button test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Press Volume Down Button" Variation="Shawville" Class="NI" Front="False" Loop="1" Mode="Parallel" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="0" Retry="2" Ask4Retry="False" File="Tools\_Volume_key.bat" Action="Down" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Check Volume Down Button" Variation="Shawville" Class="NI" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="1" Retry="10" Ask4Retry="False" File="Tools\BiFrostTools\_Button.bat" Action="Push_Button VolumeDown" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F170002" PEGA="AKFI36" String="!- Button_CHECK -! Volume down button test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Press Volume Up Button" Variation="Shawville" Class="NI" Front="False" Loop="1" Mode="Parallel" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="1.0" Wait="0" Retry="2" Ask4Retry="False" File="Tools\_Volume_key.bat" Action="Up" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Check Volume Up Button" Variation="Shawville" Class="NI" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="1" Retry="10" Ask4Retry="False" File="Tools\BiFrostTools\_Button.bat" Action="Push_Button VolumeUp" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F170001" PEGA="AKFI35" String="!- Button_CHECK -! Volume up button test fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Check Volume Up Button" Variation="Shawville" Class="NI" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BUTTON_TEST.bat" Action="Up vu" ShowTerminal="False" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="0" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F170001" PEGA="AKFI35" String="!- Button_CHECK -! Volume up button test fail" />
+			</ErrorTransform>
+		</Test>
+	</Group>
+	<Group Name="Camera connector" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Test Name="Open Front camera" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="2" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\DeviceBridge\Camera_Test.bat" Action="" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="1" To="8F0E0016" PEGA="AKFHXP" String="!-Camera_test-! Front Camera open fail" />
+				<Replace Source="FF" To="8F0E0016" PEGA="AKFHXP" String="!-Camera_test-! Front Camera open fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Front Camera check" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="3" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BiFrostTools\_Camera.bat" Action="CaptureFrontRgbImage" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="2" To="8F0E001A" PEGA="AKFHXT" String="!-Camera_test-! Front Camera device check fail" />
+				<Replace Source="FF" To="8F0E001A" PEGA="AKFHXT" String="!-Camera_test-! Front Camera device check fail" />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Open IR camera" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="2" Timeout="0" Check="False">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\DeviceBridge\Camera_Test_IR.bat" Action="" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="1" To="8F0E001D" PEGA="AKFVEX" String="!- IR_Camera_test -! IR Camera test fail." />
+				<Replace Source="FF" To="8F0E001D" PEGA="AKFVEX" String="!- IR_Camera_test -! IR Camera test fail." />
+			</ErrorTransform>
+		</Test>
+		<Test Name="IR Camera check" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BiFrostTools\_Camera.bat" Action="CaptureFrontIrImage" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="2" To="8F0E0024" PEGA="AKFP2A" String="!-Camera_Test-! IR Camera capture image fail." />
+				<Replace Source="FF" To="8F0E0024" PEGA="AKFP2A" String="!-Camera_Test-! IR Camera capture image fail." />
+			</ErrorTransform>
+		</Test>
+		<Test Name="Rear Camera device check" Variation="Shawville" Class="BootCheck" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BiFrostTools\_Camera.bat" Action="CaptureRearRgbImage" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="2" To="8F0E001B" PEGA="AKFHXU" String="!-Camera_test-! Rear Camera device check fail" />
+				<Replace Source="FF" To="8F0E001B" PEGA="AKFHXU" String="!-Camera_test-! Rear Camera device check fail" />
+			</ErrorTransform>
+		</Test>
+	</Group>
+	<Group Name="Shut Down" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
+		<Test Name="BF Shut Down" Variation="Shawville" Class="" Front="False" Loop="1" Mode="Sequential" Hold="15.0" Timeout="0" Check="True">
+			<Exec PreWait="0" Wait="0" Retry="0" Ask4Retry="False" File="Tools\BiFrostTools\_System.bat" Action="PowerControl Shutdown" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+			<ErrorTransform>
+				<Replace Source="1" To="0" PEGA="" String="Success" />
+				<Replace Source="FF" To="8F00000E" PEGA="AKFNGE" String="!- POWEROFF -! Fail to shutdown the DUT" />
+			</ErrorTransform>
+		</Test>
+	</Group>
+</Diagnostic>
