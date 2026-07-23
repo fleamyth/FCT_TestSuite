@@ -1,7 +1,8 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "PRE_PROCESS_BAT=C:\Users\TEST\Desktop\glasses_scripts\pre_post\pre_process_single - noAudio.bat"
+set "SCRIPT_DIR=C:\Users\TEST\Desktop\glasses_scripts"
+set "PRE_PROCESS_BAT="
 set "OPERATION=OP1"
 set "BACKUP_ROOT=C:\Users\TEST\Desktop\RoboGRR"
 set "SOURCE_DIR=C:\Users\TEST\Desktop\logs\robocal_output"
@@ -10,6 +11,11 @@ if not "%~1" == "" set "PRE_PROCESS_BAT=%~1"
 if not "%~2" == "" set "OPERATION=%~2"
 if not "%~3" == "" set "BACKUP_ROOT=%~3"
 if not "%~4" == "" set "SOURCE_DIR=%~4"
+
+if not defined PRE_PROCESS_BAT (
+  call :SELECT_PRE_PROCESS_BAT
+  if errorlevel 1 exit /b !ERRORLEVEL!
+)
 
 if "%~2" == "" (
   set "OPERATION_INPUT="
@@ -59,6 +65,11 @@ echo Running pre-process: "!PRE_PROCESS_BAT!"
 call "!PRE_PROCESS_BAT!"
 set "PRE_PROCESS_EXITCODE=!ERRORLEVEL!"
 
+adb root
+adb shell aflags disable com.android.microxr.flags.enable_wifi_connection_access_point
+adb shell setprop persist.microxr.internetaccess.disable_wifi_control true
+adb reboot
+
 set "SOURCE_LOG="
 if exist "!SOURCE_DIR!" (
   for /f "delims=" %%F in ('dir /b /a-d /o-d "!SOURCE_DIR!\log_file_*.log" 2^>nul') do if not defined SOURCE_LOG set "SOURCE_LOG=%%F"
@@ -100,10 +111,53 @@ echo Destination: !DESTINATION_LOG!
 echo Pre-process exit code: !PRE_PROCESS_EXITCODE!
 exit /b !PRE_PROCESS_EXITCODE!
 
+:SELECT_PRE_PROCESS_BAT
+if not exist "!SCRIPT_DIR!\" (
+  echo ERROR: Glasses scripts directory not found: "!SCRIPT_DIR!"
+  exit /b 2
+)
+
+set /a SCRIPT_COUNT=0
+echo Available batch files in "!SCRIPT_DIR!":
+echo.
+for /f "delims=" %%F in ('dir /b /s /a-d "!SCRIPT_DIR!\*.bat" 2^>nul') do (
+  set /a SCRIPT_COUNT+=1
+  set "SCRIPT_!SCRIPT_COUNT!=%%F"
+  set "SCRIPT_NAME=%%F"
+  set "SCRIPT_NAME=!SCRIPT_NAME:%SCRIPT_DIR%\=!"
+  echo   !SCRIPT_COUNT!. !SCRIPT_NAME!
+)
+
+if "!SCRIPT_COUNT!" == "0" (
+  echo ERROR: No batch files were found in "!SCRIPT_DIR!".
+  exit /b 2
+)
+
+echo.
+echo Total batch files: !SCRIPT_COUNT!
+
+:SELECT_SCRIPT
+set "SCRIPT_SELECTION="
+set /p "SCRIPT_SELECTION=Select a batch file [1-!SCRIPT_COUNT!]: "
+if not defined SCRIPT_SELECTION goto SELECT_SCRIPT
+for /f "delims=0123456789" %%A in ("!SCRIPT_SELECTION!") do goto INVALID_SCRIPT_SELECTION
+if !SCRIPT_SELECTION! LSS 1 goto INVALID_SCRIPT_SELECTION
+if !SCRIPT_SELECTION! GTR !SCRIPT_COUNT! goto INVALID_SCRIPT_SELECTION
+for %%N in (!SCRIPT_SELECTION!) do set "PRE_PROCESS_BAT=!SCRIPT_%%N!"
+echo Selected: "!PRE_PROCESS_BAT!"
+echo.
+exit /b 0
+
+:INVALID_SCRIPT_SELECTION
+echo Invalid selection. Enter a number from 1 to !SCRIPT_COUNT!.
+goto SELECT_SCRIPT
+
 :usage
 echo Usage: %~nx0 [PRE_PROCESS_BAT] [OP] [BACKUP_ROOT] [SOURCE_DIR]
 echo.
-echo Run without arguments to select OP interactively.
+echo Run without arguments to select a batch file and OP interactively.
+echo The batch-file menu recursively scans:
+echo C:\Users\TEST\Desktop\glasses_scripts
 echo PRE_PROCESS_BAT optionally overrides the configured pre-process batch file.
 echo SERIAL is detected automatically from adb devices. Exactly one device
 echo must be connected with the state device.
