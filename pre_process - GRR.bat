@@ -5,12 +5,14 @@ set "SCRIPT_DIR=C:\Users\TEST\Desktop\glasses_scripts"
 set "PRE_PROCESS_BAT="
 set "OPERATION=OP1"
 set "BACKUP_ROOT=C:\Users\TEST\Desktop\RoboGRR"
+set "NETWORK_BACKUP_ROOT=\\RBCIN14\D\RoboGRR"
 set "SOURCE_DIR=C:\Users\TEST\Desktop\logs\robocal_output"
 
 if not "%~1" == "" set "PRE_PROCESS_BAT=%~1"
 if not "%~2" == "" set "OPERATION=%~2"
 if not "%~3" == "" set "BACKUP_ROOT=%~3"
 if not "%~4" == "" set "SOURCE_DIR=%~4"
+if not "%~5" == "" set "NETWORK_BACKUP_ROOT=%~5"
 
 if not defined PRE_PROCESS_BAT (
   call :SELECT_PRE_PROCESS_BAT
@@ -105,9 +107,24 @@ if errorlevel 1 (
   exit /b 9
 )
 
+set "NETWORK_DESTINATION_DIR=!NETWORK_BACKUP_ROOT!\!SERIAL!\!OPERATION!\Pre"
+set "NETWORK_DESTINATION_LOG=!NETWORK_DESTINATION_DIR!\!LOG_NAME!"
+if not exist "!NETWORK_DESTINATION_DIR!\" mkdir "!NETWORK_DESTINATION_DIR!" 2>nul
+if not exist "!NETWORK_DESTINATION_DIR!\" (
+  echo ERROR: Could not create network backup directory "!NETWORK_DESTINATION_DIR!".
+  exit /b 10
+)
+
+copy /b /y "!SOURCE_LOG!" "!NETWORK_DESTINATION_LOG!" >nul
+if errorlevel 1 (
+  echo ERROR: Failed to copy pre-process log to "!NETWORK_DESTINATION_LOG!".
+  exit /b 10
+)
+
 echo Pre-process log backed up successfully.
 echo Source:      !SOURCE_LOG!
-echo Destination: !DESTINATION_LOG!
+echo Local:       !DESTINATION_LOG!
+echo Network:     !NETWORK_DESTINATION_LOG!
 echo Pre-process exit code: !PRE_PROCESS_EXITCODE!
 exit /b !PRE_PROCESS_EXITCODE!
 
@@ -153,7 +170,7 @@ echo Invalid selection. Enter a number from 1 to !SCRIPT_COUNT!.
 goto SELECT_SCRIPT
 
 :usage
-echo Usage: %~nx0 [PRE_PROCESS_BAT] [OP] [BACKUP_ROOT] [SOURCE_DIR]
+echo Usage: %~nx0 [PRE_PROCESS_BAT] [OP] [BACKUP_ROOT] [SOURCE_DIR] [NETWORK_BACKUP_ROOT]
 echo.
 echo Run without arguments to select a batch file and OP interactively.
 echo The batch-file menu recursively scans:
@@ -164,6 +181,7 @@ echo must be connected with the state device.
 echo If BACKUP_ROOT is omitted, Desktop\RoboGRR is used.
 echo If SOURCE_DIR is omitted, this TEST user directory is used:
 echo C:\Users\TEST\Desktop\logs\robocal_output
+echo If NETWORK_BACKUP_ROOT is omitted, \\RBCIN14\D\RoboGRR is used.
 echo.
 echo Example:
 echo %~nx0

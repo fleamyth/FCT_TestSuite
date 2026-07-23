@@ -5,15 +5,23 @@ set "DESKTOP_DIR="
 for /f "usebackq delims=" %%D in (`powershell.exe -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"`) do set "DESKTOP_DIR=%%D"
 if not defined DESKTOP_DIR set "DESKTOP_DIR=%USERPROFILE%\Desktop"
 
-set "ROBOCAL_BAT=!DESKTOP_DIR!\glasses_scripts\run_robocal_single - noAudio.bat"
+set "SCRIPT_DIR=!DESKTOP_DIR!\glasses_scripts"
+set "ROBOCAL_BAT="
 set "OPERATION=OP1"
 set "BACKUP_ROOT=!DESKTOP_DIR!\RoboGRR"
+set "NETWORK_BACKUP_ROOT=\\RBCIN14\D\RoboGRR"
 set "MASTER_OUTPUT=!DESKTOP_DIR!\logs"
 
 if not "%~1" == "" set "ROBOCAL_BAT=%~1"
 if not "%~2" == "" set "OPERATION=%~2"
 if not "%~3" == "" set "BACKUP_ROOT=%~3"
 if not "%~4" == "" set "MASTER_OUTPUT=%~4"
+if not "%~5" == "" set "NETWORK_BACKUP_ROOT=%~5"
+
+if not defined ROBOCAL_BAT (
+  call :SELECT_ROBOCAL_BAT
+  if errorlevel 1 exit /b !ERRORLEVEL!
+)
 
 if "%~2" == "" (
   set "OPERATION_INPUT="
@@ -104,9 +112,64 @@ if "!COPY_COUNT!" == "0" (
   exit /b 9
 )
 
+set "NETWORK_DESTINATION_DIR=!NETWORK_BACKUP_ROOT!\!SERIAL!\!OPERATION!\Robocal"
+if not exist "!NETWORK_DESTINATION_DIR!\" mkdir "!NETWORK_DESTINATION_DIR!" 2>nul
+if not exist "!NETWORK_DESTINATION_DIR!\" (
+  echo ERROR: Could not create network backup directory "!NETWORK_DESTINATION_DIR!".
+  exit /b 10
+)
+
+xcopy "!DESTINATION_DIR!\*" "!NETWORK_DESTINATION_DIR!\" /E /I /Y /Q >nul
+if errorlevel 1 (
+  echo ERROR: Failed to back up RoboCal data to "!NETWORK_DESTINATION_DIR!".
+  exit /b 10
+)
+
 echo RoboCal data backed up successfully.
 echo Source:      !MASTER_OUTPUT!
-echo Destination: !DESTINATION_DIR!
+echo Local:       !DESTINATION_DIR!
+echo Network:     !NETWORK_DESTINATION_DIR!
 echo Files copied: !COPY_COUNT!
 echo RoboCal exit code: !ROBOCAL_EXITCODE!
 exit /b !ROBOCAL_EXITCODE!
+
+:SELECT_ROBOCAL_BAT
+if not exist "!SCRIPT_DIR!\" (
+  echo ERROR: Glasses scripts directory not found: "!SCRIPT_DIR!"
+  exit /b 2
+)
+
+set /a SCRIPT_COUNT=0
+echo Available batch files in "!SCRIPT_DIR!":
+echo.
+for /f "delims=" %%F in ('dir /b /s /a-d "!SCRIPT_DIR!\*.bat" 2^>nul') do (
+  set /a SCRIPT_COUNT+=1
+  set "SCRIPT_!SCRIPT_COUNT!=%%F"
+  set "SCRIPT_NAME=%%F"
+  set "SCRIPT_NAME=!SCRIPT_NAME:%SCRIPT_DIR%\=!"
+  echo   !SCRIPT_COUNT!. !SCRIPT_NAME!
+)
+
+if "!SCRIPT_COUNT!" == "0" (
+  echo ERROR: No batch files were found in "!SCRIPT_DIR!".
+  exit /b 2
+)
+
+echo.
+echo Total batch files: !SCRIPT_COUNT!
+
+:SELECT_ROBOCAL_SCRIPT
+set "SCRIPT_SELECTION="
+set /p "SCRIPT_SELECTION=Select a batch file [1-!SCRIPT_COUNT!]: "
+if not defined SCRIPT_SELECTION goto SELECT_ROBOCAL_SCRIPT
+for /f "delims=0123456789" %%A in ("!SCRIPT_SELECTION!") do goto INVALID_ROBOCAL_SCRIPT_SELECTION
+if !SCRIPT_SELECTION! LSS 1 goto INVALID_ROBOCAL_SCRIPT_SELECTION
+if !SCRIPT_SELECTION! GTR !SCRIPT_COUNT! goto INVALID_ROBOCAL_SCRIPT_SELECTION
+for %%N in (!SCRIPT_SELECTION!) do set "ROBOCAL_BAT=!SCRIPT_%%N!"
+echo Selected: "!ROBOCAL_BAT!"
+echo.
+exit /b 0
+
+:INVALID_ROBOCAL_SCRIPT_SELECTION
+echo Invalid selection. Enter a number from 1 to !SCRIPT_COUNT!.
+goto SELECT_ROBOCAL_SCRIPT
