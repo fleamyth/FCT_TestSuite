@@ -11,7 +11,7 @@ SET TYPE=%1
 SET MODE=%2
 SET TEST_MODE=Online
 IF "%MODE%" EQU "D" SET TEST_MODE=Offline
-SET PROJECT=Shawville
+SET PROJECT=ML
 SET SUITE_NAME=ML_Calibration
 SET BUILD=MP
 SET CSV_NAME=%PROJECT%_%TYPE%.csv
@@ -237,12 +237,9 @@ GOTO InteruptErr
 LogTransfer-auto.exe -nl /de
 call setdate.bat
 SET Dest=C:\MFGlog\%TYPE%log\Online
-REM SET Dest2=C:\MFGlog\%TYPE%log\Online\SequencerLog\%Result%
 SET MISC=C:\MISClog\%PROJECT%\%BUILD%\Online\%datepath%\%Result%
-REM SET TestItem=SmokeTest
 SET /p TSRID=<TSRID.dat
 IF "%MODE%" EQU "D" SET Dest=C:\MFGlog\%TYPE%log\Debug
-REM IF "%MODE%" EQU "D" SET Dest2=C:\MFGlog\%TYPE%log\Debug\SequencerLog\%Result%
 IF "%MODE%" EQU "D" SET MISC=C:\MISClog\%PROJECT%\%BUILD%\Debug\%datepath%\%Result%
 
 COPY /y /v %CSV_NAME% .\tools\Temp\
