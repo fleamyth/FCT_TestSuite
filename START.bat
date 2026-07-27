@@ -36,7 +36,7 @@ IF EXIST %CSV_NAME% DEL %CSV_NAME%
 IF EXIST *KoreVer.log DEL *KoreVer.log
 IF EXIST PN.log DEL PN.log
 IF EXIST PN.txt DEL PN.txt
-IF EXIST op.dat GOTO SCANSN
+IF EXIST op.dat GOTO START
 
 DiagPGM\Chopper-diag.exe /SB "^[Ss][0-9]{2}[0-9,AaBbCc][0-9]{5}$" -SIF op.jpg -EMF sb_msg_OP.msgdat -SFN ..\OP.dat -FS 30 -st "Please scan operator number\nPlease Enter Operator Number" -sbsize 800 300
 IF %ERRORLEVEL% NEQ 0 GOTO START_OP
@@ -86,35 +86,18 @@ COPY OP.dat DiagPGM\OP.dat
 COPY SN.dat DiagPGM\SN.dat
 
 :netuse
-IF EXIST %on_Drive% GOTO timesync
+IF EXIST %on_Drive% GOTO GetDeviceID
 net use /delete %on_Drive%
 rem net use %on_Drive% \\%SFIS_IP%\%PROJECT% #*c1234 /user:testuser /persistent:yes
 
-
-:timesync
-rem skip for now goto sync
-goto sync
-DiagPGM\ping-auto.exe /C %SFIS_IP%
-IF %ERRORLEVEL% EQU 0 GOTO sync
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Connection Error<br> <br>PING SFIS IP:%SFIS_IP% FAILED<br>SFIS connection failed. Please check the network and retry!" 0xFFFFFF -bg 0x882222
-GOTO InteruptErr
-
-
-:sync
-tzutil /s "China Standard Time"
-net time \\%SFIS_IP% /SET /y
-IF %ERRORLEVEL% NEQ 0 DiagPGM\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>Please check the network connection or time sync setting.<br> <br>Press [Enter] to retry time sync..." 0xFFFFFF -bg 0x882222 & GOTO netuse
-
-
 :GetDeviceID
-call DeviceID_chk.bat
-IF %ERRORLEVEL% NEQ 0 goto START
-IF "%deviceID%" EQU "" set /p deviceID=<deviceID.ini
+rem call DeviceID_chk.bat
+rem IF %ERRORLEVEL% NEQ 0 goto START
+rem IF "%deviceID%" EQU "" set /p deviceID=<deviceID.ini
 
 :chkroute
-IF "%MODE%" EQU "D" goto TID_Catch
 python RESTSFIS-diag\RESTSFIS-diag.py /C -sn %SN%
-IF %ERRORLEVEL% EQU 0 GOTO TID_Catch
+IF %ERRORLEVEL% EQU 0 GOTO Non_TID
 IF %ERRORLEVEL% neq 0 GOTO CRfail
 
 
@@ -123,26 +106,9 @@ REM Check Route Fail
 DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Check Route Failure !!<br>Please check DUT route status !! <br>See SFISLOG\YYYYMMDD.log for details.<br>OP: %op% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
 GOTO InteruptErr
 
-
-REM ============= start disable function for current stage =============
-REM IF "%MODE%"=="D" GOTO Non_TID
-:TID_Catch
-echo Get TIDs...
-DiagPGM\KINGSFIS-Diags.exe -d %deviceID% /GTID -SN %SN% -op %op% -f tid.dat
-IF %ERRORLEVEL% EQU 255 GOTO Non_TID
-IF %ERRORLEVEL% EQU 254 GOTO GTfail
-IF NOT EXIST tid.dat GOTO GTfail
-IF %ERRORLEVEL% EQU 0 SET /p tid=<tid.dat
-GOTO getconfig
-
-:GTfail
-REM Get TID Fail
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "SFIS Error - Get TID Failure !!<br>Please check the SFIS system !! <br>See SFISLOG\YYYYMMDD.log for details.<br>OP: %OP% <br> SN: %SN%" 0xFFFFFF -bg 0x882222
-goto TID_Catch
-
 :Non_TID
-SET tid=
-echo.>tid.dat
+SET tid=NOTID
+echo NOTID>tid.dat
 
 :Getver
 goto getconfig
