@@ -10,13 +10,14 @@ Edit `RESTSFIS-diag.ini` beside the script before use:
 [SFIS]
 base_url = http://testrestapi-szmldb0-n0.sz.pegatroncorp.com/mesinterface/v1
 process = DAAT
-equipment = MLDW2165
+equipment =
 timeout = 30
 ```
 
 The specification currently lists a test endpoint. Obtain the production URL,
-Process Name, and Equipment Name from the SFIS team before release. Command-line
-values override environment variables, which override the INI values.
+Process Name, and Equipment Name from the SFIS team before release. Equipment
+defaults to the local hostname when it is blank. Command-line values override
+environment variables, which override the INI values and hostname default.
 
 ## Check route (`/C`)
 

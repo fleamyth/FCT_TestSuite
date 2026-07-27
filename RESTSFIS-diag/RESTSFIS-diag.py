@@ -10,6 +10,7 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
+import socket
 import sys
 from typing import Any, Iterable
 from urllib.error import HTTPError, URLError
@@ -79,6 +80,10 @@ def config_float(config: dict[str, str], key: str, default: float) -> float:
 
 def configured_value(config: dict[str, str], key: str, environment: str) -> str:
     return os.environ.get(environment, config.get(key, ""))
+
+
+def configured_equipment(config: dict[str, str]) -> str:
+    return configured_value(config, "equipment", "SFIS_EQUIPMENT_NAME") or socket.gethostname()
 
 
 def optional(value: str | None) -> str | None:
@@ -305,8 +310,8 @@ def check_route(args: argparse.Namespace) -> int:
         }
     )
     url = endpoint(args.base_url, "api/routing/routecheck") + "?" + query
+    print(f"GET {url}")
     if args.dry_run:
-        print(f"GET {url}")
         return EXIT_OK
 
     status, body = request_json("GET", url, args.timeout)
@@ -321,8 +326,8 @@ def check_route(args: argparse.Namespace) -> int:
 def upload_log(args: argparse.Namespace) -> int:
     payload = build_logging_payload(args)
     url = endpoint(args.base_url, "api/logging")
+    print(f"POST {url}")
     if args.dry_run:
-        print(f"POST {url}")
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return EXIT_OK
 
@@ -373,8 +378,8 @@ def build_parser(
     )
     route_parser.add_argument(
         "--equipment",
-        default=configured_value(config, "equipment", "SFIS_EQUIPMENT_NAME"),
-        help="MES equipment name",
+        default=configured_equipment(config),
+        help="MES equipment name (default: local hostname)",
     )
     route_parser.set_defaults(handler=check_route)
 
@@ -390,8 +395,8 @@ def build_parser(
     )
     upload_parser.add_argument(
         "--equipment",
-        default=configured_value(config, "equipment", "SFIS_EQUIPMENT_NAME"),
-        help="MES equipment name",
+        default=configured_equipment(config),
+        help="MES equipment name (default: local hostname)",
     )
     upload_parser.add_argument("--assembly-number", default=config.get("assembly_number"))
     upload_parser.add_argument(

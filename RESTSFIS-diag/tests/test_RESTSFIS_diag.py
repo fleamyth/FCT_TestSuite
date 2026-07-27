@@ -1,9 +1,12 @@
 import argparse
+from contextlib import redirect_stdout
 import csv
+import io
 import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "RESTSFIS-diag.py"
@@ -138,6 +141,35 @@ class LoggingPayloadTests(unittest.TestCase):
 
 
 class CommandLineTests(unittest.TestCase):
+    def test_defaults_equipment_to_local_hostname(self) -> None:
+        with patch.object(restsfis_diag.socket, "gethostname", return_value="PRCAL-PRE01"):
+            parser = restsfis_diag.build_parser()
+            args = parser.parse_args(["/c", "-sn", "P123", "--process", "DAAT"])
+
+        self.assertEqual(args.equipment, "PRCAL-PRE01")
+
+    def test_route_check_displays_complete_url(self) -> None:
+        args = argparse.Namespace(
+            process="DAAT Test",
+            equipment="MLDW2165",
+            sn="P123/456",
+            base_url="http://sfis.test/mesinterface/v1",
+            dry_run=False,
+            timeout=30.0,
+        )
+        output = io.StringIO()
+
+        with patch.object(restsfis_diag, "request_json", return_value=(200, "PASS")):
+            with redirect_stdout(output):
+                result = restsfis_diag.check_route(args)
+
+        self.assertEqual(result, restsfis_diag.EXIT_OK)
+        self.assertIn(
+            "GET http://sfis.test/mesinterface/v1/api/routing/routecheck"
+            "?process=DAAT+Test&equipmentName=MLDW2165&serialNumber=P123%2F456",
+            output.getvalue(),
+        )
+
     def test_accepts_legacy_lowercase_slash_commands(self) -> None:
         parser = restsfis_diag.build_parser()
 
