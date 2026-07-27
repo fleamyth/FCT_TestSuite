@@ -113,7 +113,7 @@ IF "%deviceID%" EQU "" set /p deviceID=<deviceID.ini
 
 :chkroute
 IF "%MODE%" EQU "D" goto TID_Catch
-DiagPGM\KINGSFIS-Diags.exe -d %deviceID% -op %OP% -SN %SN% /c
+python RESTSFIS-diag\RESTSFIS-diag.py /C -sn %SN%
 IF %ERRORLEVEL% EQU 0 GOTO TID_Catch
 IF %ERRORLEVEL% neq 0 GOTO CRfail
 
@@ -146,9 +146,6 @@ echo.>tid.dat
 
 :Getver
 goto getconfig
-IF "%MODE%" EQU "D" goto getconfig
-DiagPGM\KINGSFIS-Diags.exe -d %deviceID% -op %op% -SN %SN% /GKVER -f KoreVer.log
-IF %ERRORLEVEL% EQU 0 GOTO Ver
 echo Get TS Ver Error
 DiagPGM\Screen-diag.exe -nl -enter /ss 120 "Get TS Ver Error" 0xFFFFFF -bg 0xFF7F25
 GOTO InteruptErr
@@ -374,7 +371,7 @@ IF "%MODE%" EQU "D" GOTO END_TIP
 :chk2Aroute
 IF "%Result%" EQU "PASS" GOTO END_TIP
 Start DiagPGM\Screen-diag.exe -enter /SS 55 "Checking SN %SN% SFIS 2A status<br>Please wait... <br> <br>Checking 2A Status from SFIS<br>Please wait a moment..." 0xFFFFFF -bg 0x223366
-DiagPGM\KINGSFIS-Diags.exe -d %deviceID% -op %OP% -SN %SN% /c
+python RESTSFIS-diag\RESTSFIS-diag.py /C -sn %SN%
 IF %ERRORLEVEL% EQU 0 DiagPGM\Screen-diag.exe -enter /SS 40 "SN (2A) not allowed!!<br> <br>Please change another tester to do SN (2A) test!!<br><br>Press [ENTER] to continue..." 0xFFFFFF -bg 0x773399
 taskkill /IM Screen-diag.exe
 GOTO START
