@@ -313,7 +313,7 @@ Tools\Screen-diag.exe -nl -enter /SS 40 "%CSV_NAME% Log line check fail, please 
 :END
 IF "%Result%" NEQ "PASS" GOTO Record
 IF EXIST TSRID.dat DEL TSRID.dat
-START Tools\Screen-diag.exe -nl -enter /ss 200 "PASS"  0xFFFFFF -bg 0x008800
+Tools\Screen-diag.exe -nl -enter /ss 200 "PASS"  0xFFFFFF -bg 0x008800
 Chopper-diag.exe /delay 500 2>nul
 taskkill /IM Screen-diag.exe
 
@@ -341,5 +341,4 @@ GOTO START
 
 
 :END_TIP
-DiagPGM\Screen-diag.exe -nl -enter /SS 55 "<br>Testing complete.<br> <br>Release the WBAT PWR button and verify it is restored.<br> <br>Prepare the next test item.<br> <br>Replace the jig main power switch.<br> <br>Press [ENTER] to exit..." 0xFFFFFF -bg 0x0000FF
 GOTO START
