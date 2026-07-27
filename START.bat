@@ -20,7 +20,7 @@ IF "%DebugXML%" equ "True" SET CFG_NAME=config_Deb.xml
 SET SN_LEN=12
 SET FOLDER=%SUITE_NAME%_%Ver%_%DateVer%
 SET on_Drive=N:
-SET SFIS_IP=172.24.248.37
+SET SFIS_IP=172.24.248.128
 SET Connect=FALSE
 rem CALL DHCP.BAT
 SET /a SCAN=0
