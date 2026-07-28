@@ -1,0 +1,3 @@
+TSRID,SerialNumber,PartNumber,Operation,TesterName,TestName,TestVariation,ErrorCode,Operator,StartDateTime,EndDateTime,ProductionTest,TestSuiteName,ErrorDescription,MeasurementName,Value,Units,LowerLimit,UpperLimit,PegaCode,TicketID
+202607270812325,S6A673400064,,Calibration,PRCAL-PRE01,Boot Status Check,ML,0,s15015974,07/27/2026 04:12:32 PM,07/27/2026 04:12:33 PM,0,ML_Calibration_1.00a_20260727,Success,,,,,,,Debug
+202607270812325,S6A673400064,,Calibration,PRCAL-PRE01,TcsTestSuiteDuration,ML,0,s15015974,07/27/2026 04:12:33 PM,07/27/2026 04:12:33 PM,0,ML_Calibration_1.00a_20260727,Success,Duration,1388.0928,ms,,,,Debug

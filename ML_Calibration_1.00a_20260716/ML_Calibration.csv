@@ -1,6 +1,0 @@
-TSRID,SerialNumber,PartNumber,Operation,TesterName,TestName,TestVariation,ErrorCode,Operator,StartDateTime,EndDateTime,ProductionTest,TestSuiteName,ErrorDescription,MeasurementName,Value,Units,LowerLimit,UpperLimit,PegaCode
-202607270756507,S6A673400064,,Calibration,PRCAL-PRE01,Boot Status Check,ML,0,s15015974,07/27/2026 03:58:31 PM,07/27/2026 03:58:31 PM,1,ML_Calibration_1.00a_20260722,Success,,,,,,
-202607270756507,S6A673400064,,Calibration,PRCAL-PRE01,Pre_Process,ML,0,s15015974,07/27/2026 03:58:31 PM,07/27/2026 03:58:34 PM,1,ML_Calibration_1.00a_20260722,Success,,,,,,
-202607270756507,S6A673400064,,Calibration,PRCAL-PRE01,Pre_Process,Retry Times,0,s15015974,07/27/2026 03:58:31 PM,07/27/2026 03:58:34 PM,1,ML_Calibration_1.00a_20260722,,Retry Times,0,Times,0,1,
-202607270756507,S6A673400064,,Calibration,PRCAL-PRE01,Pre_Process(1),ML,0,s15015974,07/27/2026 03:58:34 PM,07/27/2026 04:01:02 PM,1,ML_Calibration_1.00a_20260722,Success,,,,,,
-202607270756507,S6A673400064,,Calibration,PRCAL-PRE01,Pre_Process(1),Retry Times,0,s15015974,07/27/2026 03:58:34 PM,07/27/2026 04:01:02 PM,1,ML_Calibration_1.00a_20260722,,Retry Times,0,Times,0,1,
