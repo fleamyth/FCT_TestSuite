@@ -20,7 +20,7 @@
 		</ErrorTransform>
 	</Test>
 	<Test Name="Pre_Process" Variation="ML" Class="" Front="False" Loop="1" Mode="Sequential" Hold="0" Timeout="0" Check="True">
-		<Exec PreWait="0" Wait="3.0" Retry="1" Ask4Retry="False" File="pre_process.exe --debug --skip_audio=True --config=robocalv4_config_pre_post.yaml %1 %2 %3" Action="" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
+		<Exec PreWait="0" Wait="3.0" Retry="1" Ask4Retry="False" File="C:\Program Files\Google\Robocal\pre_process.exe" Action="--debug --skip_audio=True --config=robocalv4_config_pre_post.yaml %1 %2 %3" ShowTerminal="True" FailStop="False" Rebase="False" Log="" />
 		<ErrorTransform>
 			<Replace Source="0" To="0" PEGA="" String="Success" />
 			<Replace Source="FB" To="8F042281" PEGA="NM100065015" String="!- TypeC_CHECK -! Type C tester device not found." />
