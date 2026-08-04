@@ -11,6 +11,7 @@ set "OPERATION=OP1"
 set "BACKUP_ROOT=!DESKTOP_DIR!\RoboGRR"
 set "NETWORK_BACKUP_ROOT=\\RBCIN14\D\RoboGRR"
 set "MASTER_OUTPUT=!DESKTOP_DIR!\logs"
+set "LOG_ARCHIVE_ROOT=D:\logs"
 
 if not "%~1" == "" set "ROBOCAL_BAT=%~1"
 if not "%~2" == "" set "OPERATION=%~2"
@@ -125,10 +126,32 @@ if errorlevel 1 (
   exit /b 10
 )
 
+set "LOG_ARCHIVE_DIR=!LOG_ARCHIVE_ROOT!\!LOG_IDENTIFIER!"
+if exist "!ROBOCAL_SOURCE!\" (
+  if not exist "!LOG_ARCHIVE_DIR!\" mkdir "!LOG_ARCHIVE_DIR!" 2>nul
+  if not exist "!LOG_ARCHIVE_DIR!\" (
+    echo ERROR: Could not create log archive directory "!LOG_ARCHIVE_DIR!".
+    exit /b 11
+  )
+
+  robocopy "!ROBOCAL_SOURCE!" "!LOG_ARCHIVE_DIR!" /E /MOVE /R:2 /W:1 /NFL /NDL /NJH /NJS /NP >nul
+  set "ARCHIVE_EXITCODE=!ERRORLEVEL!"
+  if !ARCHIVE_EXITCODE! GEQ 8 (
+    echo ERROR: Failed to move desktop logs to "!LOG_ARCHIVE_DIR!".
+    exit /b 11
+  )
+  rmdir "!ROBOCAL_SOURCE!" 2>nul
+  if exist "!ROBOCAL_SOURCE!\" (
+    echo ERROR: Some desktop logs could not be moved to "!LOG_ARCHIVE_DIR!".
+    exit /b 11
+  )
+)
+
 echo RoboCal data backed up successfully.
 echo Source:      !MASTER_OUTPUT!
 echo Local:       !DESTINATION_DIR!
 echo Network:     !NETWORK_DESTINATION_DIR!
+if exist "!LOG_ARCHIVE_DIR!\" echo Log archive: !LOG_ARCHIVE_DIR!
 echo Files copied: !COPY_COUNT!
 echo RoboCal exit code: !ROBOCAL_EXITCODE!
 exit /b !ROBOCAL_EXITCODE!
