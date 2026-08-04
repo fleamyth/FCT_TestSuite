@@ -204,6 +204,7 @@ SET Result=FAIL
 
 cd %~dp0%FOLDER%
 IF "%Result%" EQU "FAIL" Tools\UILogResult-auto.exe -log %CSV_NAME% /F
+CALL :WAIT_DUT_DISCONNECT
 GOTO jigup
 
 :TestPass
@@ -300,9 +301,14 @@ Tools\Screen-diag.exe -nl -enter /ss 200 "PASS"  0xFFFFFF -bg 0x008800
 Chopper-diag.exe /delay 500 2>nul
 taskkill /IM Screen-diag.exe
 
-Tools\Screen-diag.exe -nl /SS 55 "Please disconnect the device from the computer.<br><br>Waiting for ADB device disconnection..." 0xFFFFFF -bg 0xFF7F25
+CALL :WAIT_DUT_DISCONNECT
+GOTO Record
 
 :WAIT_DUT_DISCONNECT
+START "" Tools\Screen-diag.exe -nl /SS 55 "Please disconnect the device from the computer.<br><br>Waiting for ADB device disconnection..." 0xFFFFFF -bg 0xFF7F25
+TIMEOUT /T 1 /NOBREAK >nul
+
+:WAIT_DUT_DISCONNECT_CHECK
 SET "ADB_DEVICE_CONNECTED="
 adb devices >"%TEMP%\ML_PreProcess_adb_devices.tmp" 2>nul
 IF %ERRORLEVEL% NEQ 0 GOTO WAIT_DUT_DISCONNECT_RETRY
@@ -310,12 +316,12 @@ FOR /F "usebackq skip=1 tokens=1" %%A IN ("%TEMP%\ML_PreProcess_adb_devices.tmp"
 DEL /Q "%TEMP%\ML_PreProcess_adb_devices.tmp" 2>nul
 IF DEFINED ADB_DEVICE_CONNECTED GOTO WAIT_DUT_DISCONNECT_RETRY
 taskkill /IM Screen-diag.exe
-GOTO Record
+EXIT /B 0
 
 :WAIT_DUT_DISCONNECT_RETRY
 DEL /Q "%TEMP%\ML_PreProcess_adb_devices.tmp" 2>nul
 TIMEOUT /T 1 /NOBREAK >nul
-GOTO WAIT_DUT_DISCONNECT
+GOTO WAIT_DUT_DISCONNECT_CHECK
 
 :Record
 IF "%MODE%" EQU "D" GOTO Record1
