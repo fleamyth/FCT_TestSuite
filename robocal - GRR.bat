@@ -12,6 +12,8 @@ set "BACKUP_ROOT=!DESKTOP_DIR!\RoboGRR"
 set "NETWORK_BACKUP_ROOT=\\RBCIN14\D\RoboGRR"
 set "MASTER_OUTPUT=!DESKTOP_DIR!\logs"
 set "LOG_ARCHIVE_ROOT=D:\logs"
+set "GOOGLE_DRIVE_URL=https://drive.google.com/drive/folders/1VuN9N7JXBBuHByXVgUjm1jEw18wSW_N6"
+set "GOOGLE_DRIVE_UPLOAD_BAT=%~dp0ML_PreProcess_1.00a_20260716\Tools\upload_Folder_to_google_drive.bat"
 
 if not "%~1" == "" set "ROBOCAL_BAT=%~1"
 if not "%~2" == "" set "OPERATION=%~2"
@@ -147,10 +149,17 @@ if exist "!ROBOCAL_SOURCE!\" (
   )
 )
 
+call "!GOOGLE_DRIVE_UPLOAD_BAT!" "!BACKUP_ROOT!\!SERIAL!" "!GOOGLE_DRIVE_URL!"
+if errorlevel 1 (
+  echo ERROR: Failed to upload RoboCal data to Google Drive.
+  exit /b 12
+)
+
 echo RoboCal data backed up successfully.
 echo Source:      !MASTER_OUTPUT!
 echo Local:       !DESTINATION_DIR!
 echo Network:     !NETWORK_DESTINATION_DIR!
+echo Google Drive: !GOOGLE_DRIVE_URL!
 if exist "!LOG_ARCHIVE_DIR!\" echo Log archive: !LOG_ARCHIVE_DIR!
 echo Files copied: !COPY_COUNT!
 echo RoboCal exit code: !ROBOCAL_EXITCODE!

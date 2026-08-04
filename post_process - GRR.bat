@@ -11,6 +11,8 @@ set "OPERATION=OP1"
 set "BACKUP_ROOT=!DESKTOP_DIR!\RoboGRR"
 set "NETWORK_BACKUP_ROOT=\\RBCIN14\D\RoboGRR"
 set "MASTER_OUTPUT=!DESKTOP_DIR!\logs"
+set "GOOGLE_DRIVE_URL=https://drive.google.com/drive/folders/1VuN9N7JXBBuHByXVgUjm1jEw18wSW_N6"
+set "GOOGLE_DRIVE_UPLOAD_BAT=%~dp0ML_PreProcess_1.00a_20260716\Tools\upload_Folder_to_google_drive.bat"
 
 if not "%~1" == "" set "POST_PROCESS_BAT=%~1"
 if not "%~2" == "" set "OPERATION=%~2"
@@ -124,10 +126,17 @@ if errorlevel 1 (
   exit /b 10
 )
 
+call "!GOOGLE_DRIVE_UPLOAD_BAT!" "!BACKUP_ROOT!\!SERIAL!" "!GOOGLE_DRIVE_URL!"
+if errorlevel 1 (
+  echo ERROR: Failed to upload post-process data to Google Drive.
+  exit /b 11
+)
+
 echo Post-process data backed up successfully.
 echo Source:      !MASTER_OUTPUT!
 echo Local:       !DESTINATION_DIR!
 echo Network:     !NETWORK_DESTINATION_DIR!
+echo Google Drive: !GOOGLE_DRIVE_URL!
 echo Files copied: !COPY_COUNT!
 echo Post-process exit code: !POST_PROCESS_EXITCODE!
 exit /b !POST_PROCESS_EXITCODE!
