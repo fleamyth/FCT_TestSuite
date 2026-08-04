@@ -22,6 +22,12 @@ SET FOLDER=%SUITE_NAME%_%Ver%_%DateVer%
 SET on_Drive=N:
 SET SFIS_IP=172.24.248.128
 SET Connect=FALSE
+SET "GOOGLE_DRIVE_URL=https://drive.google.com/drive/folders/1VuN9N7JXBBuHByXVgUjm1jEw18wSW_N6"
+SET "GOOGLE_DRIVE_UPLOAD_BAT=%~dp0%FOLDER%\Tools\upload_Folder_to_google_drive.bat"
+SET "DESKTOP_DIR="
+FOR /F "usebackq delims=" %%D IN (`powershell.exe -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"`) DO SET "DESKTOP_DIR=%%D"
+IF NOT DEFINED DESKTOP_DIR SET "DESKTOP_DIR=%USERPROFILE%\Desktop"
+SET "GRR_BACKUP_ROOT=%DESKTOP_DIR%\RoboGRR"
 rem CALL DHCP.BAT
 SET /a SCAN=0
 
@@ -204,6 +210,7 @@ SET Result=FAIL
 
 cd %~dp0%FOLDER%
 IF "%Result%" EQU "FAIL" Tools\UILogResult-auto.exe -log %CSV_NAME% /F
+CALL :UPLOAD_GRR_TO_GOOGLE_DRIVE
 CALL :WAIT_DUT_DISCONNECT
 GOTO jigup
 
@@ -301,6 +308,7 @@ Tools\Screen-diag.exe -nl -enter /ss 200 "PASS"  0xFFFFFF -bg 0x008800
 Chopper-diag.exe /delay 500 2>nul
 taskkill /IM Screen-diag.exe
 
+CALL :UPLOAD_GRR_TO_GOOGLE_DRIVE
 CALL :WAIT_DUT_DISCONNECT
 GOTO Record
 
@@ -322,6 +330,18 @@ EXIT /B 0
 DEL /Q "%TEMP%\ML_PreProcess_adb_devices.tmp" 2>nul
 TIMEOUT /T 1 /NOBREAK >nul
 GOTO WAIT_DUT_DISCONNECT_CHECK
+
+:UPLOAD_GRR_TO_GOOGLE_DRIVE
+IF NOT EXIST "%GRR_BACKUP_ROOT%\%SN%\" (
+ECHO Google Drive upload skipped: "%GRR_BACKUP_ROOT%\%SN%" does not exist.
+EXIT /B 0
+)
+
+CALL "%GOOGLE_DRIVE_UPLOAD_BAT%" "%GRR_BACKUP_ROOT%\%SN%" "%GOOGLE_DRIVE_URL%"
+IF %ERRORLEVEL% EQU 0 EXIT /B 0
+
+Tools\Screen-diag.exe -nl -enter /SS 40 "Google Drive upload FAIL!!<br><br>SN: %SN%<br>Please check rclone and network settings.<br><br>Press [Enter] to continue." 0xFFFFFF -bg 0x882222
+EXIT /B 1
 
 :Record
 IF "%MODE%" EQU "D" GOTO Record1
