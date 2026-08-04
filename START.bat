@@ -27,7 +27,7 @@ SET "GOOGLE_DRIVE_UPLOAD_BAT=%~dp0%FOLDER%\Tools\upload_Folder_to_google_drive.b
 SET "DESKTOP_DIR="
 FOR /F "usebackq delims=" %%D IN (`powershell.exe -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"`) DO SET "DESKTOP_DIR=%%D"
 IF NOT DEFINED DESKTOP_DIR SET "DESKTOP_DIR=%USERPROFILE%\Desktop"
-SET "GRR_BACKUP_ROOT=%DESKTOP_DIR%\RoboGRR"
+SET "LOG_ROOT=%DESKTOP_DIR%\logs"
 rem CALL DHCP.BAT
 SET /a SCAN=0
 
@@ -76,7 +76,6 @@ IF "%DUT_SN:~11,1%"=="" GOTO GetDutSN
 
 ECHO %DUT_SN%>SN.dat
 
-
 IF %ERRORLEVEL% EQU 0 GOTO SetVar
 GOTO GetDutSN
 
@@ -88,6 +87,9 @@ REM Screen-diag.exe -nl -enter /spt "plug1.png"
 REM cd..
 IF EXIST OP.dat SET /p OP=<OP.dat
 IF EXIST SN.dat SET /p SN=<SN.dat
+SET "LOG_IDENTIFIER="
+FOR /F "usebackq delims=" %%H IN (`adb shell getprop ro.serialno 2^>nul`) DO SET "LOG_IDENTIFIER=%%H"
+IF NOT DEFINED LOG_IDENTIFIER SET "LOG_IDENTIFIER=%SN%"
 COPY OP.dat DiagPGM\OP.dat
 COPY SN.dat DiagPGM\SN.dat
 
@@ -332,15 +334,15 @@ TIMEOUT /T 1 /NOBREAK >nul
 GOTO WAIT_DUT_DISCONNECT_CHECK
 
 :UPLOAD_GRR_TO_GOOGLE_DRIVE
-IF NOT EXIST "%GRR_BACKUP_ROOT%\%SN%\" (
-ECHO Google Drive upload skipped: "%GRR_BACKUP_ROOT%\%SN%" does not exist.
+IF NOT EXIST "%LOG_ROOT%\%LOG_IDENTIFIER%\" (
+ECHO Google Drive upload skipped: "%LOG_ROOT%\%LOG_IDENTIFIER%" does not exist.
 EXIT /B 0
 )
 
-CALL "%GOOGLE_DRIVE_UPLOAD_BAT%" "%GRR_BACKUP_ROOT%\%SN%" "%GOOGLE_DRIVE_URL%"
+CALL "%GOOGLE_DRIVE_UPLOAD_BAT%" "%LOG_ROOT%\%LOG_IDENTIFIER%" "%GOOGLE_DRIVE_URL%"
 IF %ERRORLEVEL% EQU 0 EXIT /B 0
 
-Tools\Screen-diag.exe -nl -enter /SS 40 "Google Drive upload FAIL!!<br><br>SN: %SN%<br>Please check rclone and network settings.<br><br>Press [Enter] to continue." 0xFFFFFF -bg 0x882222
+Tools\Screen-diag.exe -nl -enter /SS 40 "Google Drive upload FAIL!!<br><br>Log ID: %LOG_IDENTIFIER%<br>Please check rclone and network settings.<br><br>Press [Enter] to continue." 0xFFFFFF -bg 0x882222
 EXIT /B 1
 
 :Record
