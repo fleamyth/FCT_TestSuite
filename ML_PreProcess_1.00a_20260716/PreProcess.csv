@@ -1,7 +1,0 @@
-TSRID,SerialNumber,PartNumber,Operation,TesterName,TestName,TestVariation,ErrorCode,Operator,StartDateTime,EndDateTime,ProductionTest,TestSuiteName,ErrorDescription,MeasurementName,Value,Units,LowerLimit,UpperLimit,PegaCode,TicketID
-202607270847526,S6A673400064,,Calibration,PRCAL-PRE01,Boot Status Check,ML,0,S19170077,07/27/2026 04:47:52 PM,07/27/2026 04:47:53 PM,0,ML_Calibration_1.00a_20260727,Success,,,,,,,Debug
-202607270847526,S6A673400064,,Calibration,PRCAL-PRE01,Dsi_restore_factory_calibration,ML,0,S19170077,07/27/2026 04:47:53 PM,07/27/2026 04:47:56 PM,0,ML_Calibration_1.00a_20260727,Success,,,,,,,Debug
-202607270847526,S6A673400064,,Calibration,PRCAL-PRE01,Dsi_restore_factory_calibration,Retry Times,0,S19170077,07/27/2026 04:47:53 PM,07/27/2026 04:47:56 PM,0,ML_Calibration_1.00a_20260727,,Retry Times,0,Times,0,1,,Debug
-202607270847526,S6A673400064,,Calibration,PRCAL-PRE01,Pre_Process,ML,8F042250,S19170077,07/27/2026 04:47:56 PM,07/27/2026 04:50:32 PM,0,ML_Calibration_1.00a_20260727,!- TypeC_CHECK -! Type C USB 3.0 funtion Fail.,,,,,,AKGFWV,Debug
-202607270847526,S6A673400064,,Calibration,PRCAL-PRE01,Pre_Process,Retry Times,0,S19170077,07/27/2026 04:47:56 PM,07/27/2026 04:50:32 PM,0,ML_Calibration_1.00a_20260727,,Retry Times,1,Times,0,1,,Debug
-202607270847526,S6A673400064,,Calibration,PRCAL-PRE01,TcsTestSuiteDuration,ML,0,S19170077,07/27/2026 04:50:33 PM,07/27/2026 04:50:33 PM,0,ML_Calibration_1.00a_20260727,Success,Duration,161254.6937,ms,,,,Debug

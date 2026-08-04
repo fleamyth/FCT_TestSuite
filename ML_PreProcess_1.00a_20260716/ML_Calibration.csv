@@ -1,5 +1,0 @@
-TSRID,SerialNumber,PartNumber,Operation,TesterName,TestName,TestVariation,ErrorCode,Operator,StartDateTime,EndDateTime,ProductionTest,TestSuiteName,ErrorDescription,MeasurementName,Value,Units,LowerLimit,UpperLimit,PegaCode,TicketID
-202608040211435,S6A673400064,,Calibration,PRCAL-PRE01,Boot Status Check,ML,0,s19170077,08/04/2026 10:11:43 AM,08/04/2026 10:11:44 AM,1,ML_Calibration_1.00a_20260728,Success,,,,,,,NOTID
-202608040211435,S6A673400064,,Calibration,PRCAL-PRE01,Pre_Process,ML,8F042250,s19170077,08/04/2026 10:11:44 AM,08/04/2026 10:11:47 AM,1,ML_Calibration_1.00a_20260728,!- TypeC_CHECK -! Type C USB 3.0 funtion Fail.,,,,,,AKGFWV,NOTID
-202608040211435,S6A673400064,,Calibration,PRCAL-PRE01,Pre_Process,Retry Times,0,s19170077,08/04/2026 10:11:44 AM,08/04/2026 10:11:47 AM,1,ML_Calibration_1.00a_20260728,,Retry Times,1,Times,0,1,,NOTID
-202608040211435,S6A673400064,,Calibration,PRCAL-PRE01,TcsTestSuiteDuration,ML,0,s19170077,08/04/2026 10:11:47 AM,08/04/2026 10:11:47 AM,1,ML_Calibration_1.00a_20260728,Success,Duration,5048.3721,ms,,,,NOTID

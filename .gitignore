@@ -11,3 +11,6 @@ htmlcov/
 # Local Python environments
 .venv/
 venv/
+
+# Generated CSV data
+*.csv
