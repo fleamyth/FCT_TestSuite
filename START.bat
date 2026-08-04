@@ -300,6 +300,23 @@ Tools\Screen-diag.exe -nl -enter /ss 200 "PASS"  0xFFFFFF -bg 0x008800
 Chopper-diag.exe /delay 500 2>nul
 taskkill /IM Screen-diag.exe
 
+Tools\Screen-diag.exe -nl /SS 55 "Please disconnect the device from the computer.<br><br>Waiting for ADB device disconnection..." 0xFFFFFF -bg 0xFF7F25
+
+:WAIT_DUT_DISCONNECT
+SET "ADB_DEVICE_CONNECTED="
+adb devices >"%TEMP%\ML_PreProcess_adb_devices.tmp" 2>nul
+IF %ERRORLEVEL% NEQ 0 GOTO WAIT_DUT_DISCONNECT_RETRY
+FOR /F "usebackq skip=1 tokens=1" %%A IN ("%TEMP%\ML_PreProcess_adb_devices.tmp") DO SET "ADB_DEVICE_CONNECTED=TRUE"
+DEL /Q "%TEMP%\ML_PreProcess_adb_devices.tmp" 2>nul
+IF DEFINED ADB_DEVICE_CONNECTED GOTO WAIT_DUT_DISCONNECT_RETRY
+taskkill /IM Screen-diag.exe
+GOTO Record
+
+:WAIT_DUT_DISCONNECT_RETRY
+DEL /Q "%TEMP%\ML_PreProcess_adb_devices.tmp" 2>nul
+TIMEOUT /T 1 /NOBREAK >nul
+GOTO WAIT_DUT_DISCONNECT
+
 :Record
 IF "%MODE%" EQU "D" GOTO Record1
 cd %~dp0
