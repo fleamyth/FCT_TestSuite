@@ -177,6 +177,9 @@ set /p SN=<SN.dat
 
 echo %SN%>SN.DAT
 cd %~dp0%FOLDER%
+IF DEFINED TEST_RUN_MARKER DEL /Q "%TEST_RUN_MARKER%" 2>nul
+SET "TEST_RUN_MARKER=%TEMP%\ML_PreProcess_run_%RANDOM%_%RANDOM%.tmp"
+TYPE NUL >"%TEST_RUN_MARKER%"
 Chopper-diag.exe -NoHotKey -LD TcsTestSuiteDuration %PROJECT% -c -si -CGV -opf op.dat -SNF SN.dat -sip -TSRID -lock -RL -f %CFG_NAME% -as -ae -SNP "^[0-9,A-Z]{%SN_LEN%}$" -tidf tid.dat -lf ..\DiagPGM\tidlog.xml /r
 IF %ERRORLEVEL% EQU 0 GOTO TestPass
 IF %ERRORLEVEL% EQU 255 GOTO TestFail
@@ -334,13 +337,37 @@ TIMEOUT /T 1 /NOBREAK >nul
 GOTO WAIT_DUT_DISCONNECT_CHECK
 
 :UPLOAD_GRR_TO_GOOGLE_DRIVE
-IF NOT EXIST "%LOG_ROOT%\%LOG_IDENTIFIER%\" (
-ECHO Google Drive upload skipped: "%LOG_ROOT%\%LOG_IDENTIFIER%" does not exist.
-EXIT /B 0
-)
-
+SET "GOOGLE_DRIVE_UPLOAD_FAILED=0"
+IF NOT EXIST "%LOG_ROOT%\%LOG_IDENTIFIER%\" ECHO Google Drive folder upload skipped: "%LOG_ROOT%\%LOG_IDENTIFIER%" does not exist.
+IF NOT EXIST "%LOG_ROOT%\%LOG_IDENTIFIER%\" GOTO FIND_CURRENT_ROBOCAL_LOG
 CALL "%GOOGLE_DRIVE_UPLOAD_BAT%" "%LOG_ROOT%\%LOG_IDENTIFIER%" "%GOOGLE_DRIVE_URL%"
-IF %ERRORLEVEL% EQU 0 EXIT /B 0
+IF %ERRORLEVEL% NEQ 0 SET "GOOGLE_DRIVE_UPLOAD_FAILED=1"
+
+:FIND_CURRENT_ROBOCAL_LOG
+SET "CURRENT_ROBOCAL_LOG="
+IF EXIST "%TEST_RUN_MARKER%" FOR /F "usebackq delims=" %%L IN (`powershell.exe -NoProfile -Command "$marker=(Get-Item -LiteralPath $env:TEST_RUN_MARKER).LastWriteTimeUtc; $dir=Join-Path $env:LOG_ROOT 'robocal_output'; $latest=$null; if(Test-Path -LiteralPath $dir){foreach($file in Get-ChildItem -LiteralPath $dir -File){if(($file.Name -like 'log_file_*.log' -or $file.Name -like 'log_file_*.txt') -and $file.LastWriteTimeUtc -ge $marker -and ($null -eq $latest -or $file.LastWriteTimeUtc -gt $latest.LastWriteTimeUtc)){$latest=$file}}}; if($null -ne $latest){$latest.FullName}"`) DO SET "CURRENT_ROBOCAL_LOG=%%L"
+IF NOT DEFINED CURRENT_ROBOCAL_LOG ECHO Google Drive log upload skipped: no new robocal_output log was found.
+IF NOT DEFINED CURRENT_ROBOCAL_LOG GOTO GOOGLE_DRIVE_UPLOAD_FINISH
+
+SET "GOOGLE_DRIVE_STAGE_ROOT=%TEMP%\ML_PreProcess_gdrive_%RANDOM%_%RANDOM%"
+SET "GOOGLE_DRIVE_STAGE=%GOOGLE_DRIVE_STAGE_ROOT%\%LOG_IDENTIFIER%"
+MKDIR "%GOOGLE_DRIVE_STAGE%" 2>nul
+COPY /Y "%CURRENT_ROBOCAL_LOG%" "%GOOGLE_DRIVE_STAGE%\" >nul
+IF %ERRORLEVEL% NEQ 0 GOTO GOOGLE_DRIVE_STAGE_COPY_FAIL
+CALL "%GOOGLE_DRIVE_UPLOAD_BAT%" "%GOOGLE_DRIVE_STAGE%" "%GOOGLE_DRIVE_URL%"
+IF %ERRORLEVEL% NEQ 0 SET "GOOGLE_DRIVE_UPLOAD_FAILED=1"
+GOTO GOOGLE_DRIVE_STAGE_CLEANUP
+
+:GOOGLE_DRIVE_STAGE_COPY_FAIL
+SET "GOOGLE_DRIVE_UPLOAD_FAILED=1"
+
+:GOOGLE_DRIVE_STAGE_CLEANUP
+RMDIR /S /Q "%GOOGLE_DRIVE_STAGE_ROOT%" 2>nul
+
+:GOOGLE_DRIVE_UPLOAD_FINISH
+DEL /Q "%TEST_RUN_MARKER%" 2>nul
+SET "TEST_RUN_MARKER="
+IF "%GOOGLE_DRIVE_UPLOAD_FAILED%" EQU "0" EXIT /B 0
 
 Tools\Screen-diag.exe -nl -enter /SS 40 "Google Drive upload FAIL!!<br><br>Log ID: %LOG_IDENTIFIER%<br>Please check rclone and network settings.<br><br>Press [Enter] to continue." 0xFFFFFF -bg 0x882222
 EXIT /B 1
