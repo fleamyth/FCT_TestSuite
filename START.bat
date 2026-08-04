@@ -216,11 +216,7 @@ SET /p TSRID=<TSRID.dat
 cd %~dp0%FOLDER%
 
 :CHKTimeSync
-IF "%MODE%" EQU "D" Tools\CSV-diag.exe /debug %CSV_NAME% & GOTO Backup
-IF "%SFISCONN%" NEQ "True" goto DateCHK
-tzutil /s "China Standard Time"
-net time \\%SFIS_IP% /SET /y
-IF %ERRORLEVEL% NEQ 0 Tools\Screen-diag.exe -nl -enter /SS 55 "Time Sync Error<br> <br>Please check the network connection or time sync setting.<br> <br>Press [Enter] to retry time sync..." 0xFFFFFF -bg 0x882222 & GOTO CHKTimeSync
+rem noTimeSyncAnymore
 
 :DateCHK
 Tools\DateChk-auto.exe /FILE %CSV_NAME%
@@ -255,7 +251,7 @@ copy /y .\MISCLog.zip %MISC%\%SN%_%TSRID%.zip
 
 REM TASKKILL /F /IM DB-diag.exe /T
 cd..
-Tools\LogTransfer-auto.exe -nl -d %Dest% -F %Result% /L %CSV_NAME%
+Tools\LogTransfer-auto.exe -nl /L %CSV_NAME%
 REM COPY %CSV_NAME% %Dest2%\%sn%_%TSRID%.csv
 IF "%MODE%" EQU "D" GOTO END
 GOTO N_UP
@@ -266,21 +262,11 @@ cd %~dp0%FOLDER%
 :DUT1_UP
 IF %Result% EQU FAIL goto DUT1_UP_fail
 :DUT1_UP_pass
-Tools\LogTransfer-auto.exe -nl -U connection.ok -D %on_Drive%\Log\%TYPE%\ -tester -F PASS /L %CSV_NAME%
-IF %ERRORLEVEL% NEQ 0 GOTO ReConnect
+Tools\LogTransfer-auto.exe -nl  -tester -F PASS /L %CSV_NAME%
 goto SFIS_UP
 :DUT1_UP_fail
-Tools\LogTransfer-auto.exe -nl -U connection.ok -D %on_Drive%\Log\%TYPE%\ -tester -F FAIL /L %CSV_NAME%
-IF %ERRORLEVEL% NEQ 0 GOTO ReConnect
+Tools\LogTransfer-auto.exe -nl  -tester -F FAIL /L %CSV_NAME%
 goto SFIS_UP
-
-:ReConnect
-IF "%Connect%" EQU "True" GOTO LAN_fail
-net use /delete %on_Drive%
-net use %on_Drive% \\%SFIS_IP%\%PROJECT% #*c1234 /user:testuser /persistent:yes
-SET Connect=True
-REM GOTO %Result%
-GOTO N_UP
 
 :LAN_fail
 ECHO %date%_%time%_%SN%_%TSRID% Upload Online Log Failed Error  >>C:\MFGlog\%TYPE%log\event\_UploadError.log
@@ -292,12 +278,9 @@ SET SFISerror=0
 
 :SFIS
 IF "%Result%" NEQ "PASS" GOTO SFIS1
-Tools\PT-diags.exe /CLS %CSV_NAME% > csvline.log
-Tools\PT-diags.exe /GV csvline.log "Total Lines in File = " 36 36
-if %errorlevel% neq 0 goto LOGfail
 
 :SFIS1
-Tools\KINGSFIS-Diags.exe -d %deviceID% -krown /up -tid -sfec -log %CSV_NAME%
+python RESTSFIS-diag.py /UP -log %CSV_NAME%
 IF %ERRORLEVEL% NEQ 0 GOTO SFIS_fail
 GOTO END
 
