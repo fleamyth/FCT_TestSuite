@@ -300,7 +300,7 @@ Tools\Screen-diag.exe -nl -enter /ss 200 "PASS"  0xFFFFFF -bg 0x008800
 Chopper-diag.exe /delay 500 2>nul
 taskkill /IM Screen-diag.exe
 
-Tools\Screen-diag.exe -nl /SS 55 "Please disconnect the device from the computer.<br><br>Waiting for ADB device disconnection..." 0xFFFFFF -bg 0xFF7F25
+start Tools\Screen-diag.exe -nl /SS 55 "Please disconnect the device from the computer.<br><br>Waiting for ADB device disconnection..." 0xFFFFFF -bg 0xFF7F25
 
 :WAIT_DUT_DISCONNECT
 SET "ADB_DEVICE_CONNECTED="
