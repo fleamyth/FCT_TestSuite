@@ -2,6 +2,7 @@ REM Program Description
 REM Copyright by Pegatron, Build Date:2016-11-02 Rev1.01f, Diagnostics
 REM ============================================================
 @echo on
+IF /I "%~1"=="__UPLOAD_GRR_WORKER" GOTO UPLOAD_GRR_WORKER
 IF EXIST op.dat DEL op.dat
 REM ===== Version Setting =====
 SET Ver=1.00a
@@ -28,7 +29,6 @@ SET "DESKTOP_DIR="
 FOR /F "usebackq delims=" %%D IN (`powershell.exe -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"`) DO SET "DESKTOP_DIR=%%D"
 IF NOT DEFINED DESKTOP_DIR SET "DESKTOP_DIR=%USERPROFILE%\Desktop"
 SET "LOG_ROOT=%DESKTOP_DIR%\logs"
-rem CALL DHCP.BAT
 SET /a SCAN=0
 
 :START_OP
@@ -79,12 +79,7 @@ ECHO %DUT_SN%>SN.dat
 IF %ERRORLEVEL% EQU 0 GOTO SetVar
 GOTO GetDutSN
 
-GOTO SetVar
-
 :setvar
-REM cd DiagPGM
-REM Screen-diag.exe -nl -enter /spt "plug1.png"
-REM cd..
 IF EXIST OP.dat SET /p OP=<OP.dat
 IF EXIST SN.dat SET /p SN=<SN.dat
 SET "LOG_IDENTIFIER="
@@ -93,21 +88,12 @@ IF NOT DEFINED LOG_IDENTIFIER SET "LOG_IDENTIFIER=%SN%"
 COPY OP.dat DiagPGM\OP.dat
 COPY SN.dat DiagPGM\SN.dat
 
-:netuse
-IF EXIST %on_Drive% GOTO GetDeviceID
-net use /delete %on_Drive%
-rem net use %on_Drive% \\%SFIS_IP%\%PROJECT% #*c1234 /user:testuser /persistent:yes
-
-:GetDeviceID
-rem call DeviceID_chk.bat
-rem IF %ERRORLEVEL% NEQ 0 goto START
-rem IF "%deviceID%" EQU "" set /p deviceID=<deviceID.ini
+IF NOT EXIST %on_Drive% net use /delete %on_Drive%
 
 :chkroute
 python RESTSFIS-diag\RESTSFIS-diag.py /C -sn %SN%
 IF %ERRORLEVEL% EQU 0 GOTO Non_TID
-IF %ERRORLEVEL% neq 0 GOTO CRfail
-
+GOTO CRfail
 
 :CRfail
 REM Check Route Fail
@@ -118,25 +104,12 @@ GOTO InteruptErr
 SET tid=NOTID
 echo NOTID>tid.dat
 
-:Getver
-goto getconfig
-echo Get TS Ver Error
-DiagPGM\Screen-diag.exe -nl -enter /ss 120 "Get TS Ver Error" 0xFFFFFF -bg 0xFF7F25
-GOTO InteruptErr
-
-:Ver
-IF NOT EXIST KoreVer.log GOTO Getver
-DiagPGM\PT-diags.exe /gstr KoreVer.log -start_comma 0 -end_comma 1 >%TYPE%KoreVer.log
-SET /p FOLDER=<%TYPE%KoreVer.log
-REM ============= end disable function for current stage =============
-
 :getconfig
 IF "%SFISCONN%" EQU "True" Call config.bat 1 online %FOLDER%
 IF "%SFISCONN%" NEQ "True" Call config.bat 1 offline %FOLDER%
 IF "%SFISCONN%" NEQ "True" GOTO NoSFISTid
 GOTO clean
 :NoSFISTid
-rem DiagPGM\Screen-diag.exe -nl -enter /ss 35 "Reminder<br> <br> SFISCONN Setting is not True<br>SFISCONN must be set to True<br> <br> TicketID will show [Debug] <br>TicketID will display Debug<br> <br> Press [Enter] to start the test <br>Please confirm and press Enter to continue." 0xFFFFFF -bg 0xFF7F25
 echo Debug>tid.dat
 
 :clean
@@ -160,7 +133,6 @@ del online.flg
 IF "%DebugXML%" neq "True" echo flg > online.flg
 IF "%DebugXML%" equ "True" echo debug>debug.flg
 IF EXIST %CSV_NAME% DEL %CSV_NAME%
-rem IF EXIST %CSV_Steps% DEL %CSV_Steps%
 IF EXIST .chopper RMDIR /S /Q .chopper
 IF EXIST *.log DEL *.log
 IF EXIST *.wav DEL *.wav
@@ -192,7 +164,6 @@ IF %ERRORLEVEL% EQU 254 GOTO InteruptErr
 
 :InteruptErr
 ECHO Interupt Error
-REM Pause
 GOTO START
 
 :TestFail
@@ -214,9 +185,8 @@ goto START
 SET Result=FAIL
 
 cd %~dp0%FOLDER%
-IF "%Result%" EQU "FAIL" Tools\UILogResult-auto.exe -log %CSV_NAME% /F
-CALL :UPLOAD_GRR_TO_GOOGLE_DRIVE
-CALL :WAIT_DUT_DISCONNECT
+Tools\UILogResult-auto.exe -log %CSV_NAME% /F
+CALL :UPLOAD_GRR_AND_WAIT_DUT_DISCONNECT
 GOTO jigup
 
 :TestPass
@@ -227,9 +197,6 @@ SET Result=PASS
 :jigup
 SET /p TSRID=<TSRID.dat
 cd %~dp0%FOLDER%
-
-:CHKTimeSync
-rem noTimeSyncAnymore
 
 :DateCHK
 Tools\DateChk-auto.exe /FILE %CSV_NAME%
@@ -261,38 +228,21 @@ rename temp MISCLog
 IF NOT EXIST %MISC% MKDIR %MISC%
 copy /y .\MISCLog.zip %MISC%\%SN%_%TSRID%.zip
 
-
-REM TASKKILL /F /IM DB-diag.exe /T
 cd..
 Tools\LogTransfer-auto.exe -nl /L %CSV_NAME%
-REM COPY %CSV_NAME% %Dest2%\%sn%_%TSRID%.csv
 IF "%MODE%" EQU "D" GOTO END
-GOTO N_UP
-
-:N_UP
 cd %~dp0%FOLDER%
 
-:DUT1_UP
 IF %Result% EQU FAIL goto DUT1_UP_fail
-:DUT1_UP_pass
 Tools\LogTransfer-auto.exe -nl  -tester -F PASS /L %CSV_NAME%
 goto SFIS_UP
 :DUT1_UP_fail
 Tools\LogTransfer-auto.exe -nl  -tester -F FAIL /L %CSV_NAME%
-goto SFIS_UP
-
-:LAN_fail
-ECHO %date%_%time%_%SN%_%TSRID% Upload Online Log Failed Error  >>C:\MFGlog\%TYPE%log\event\_UploadError.log
-
-GOTO SFIS_UP
 
 :SFIS_UP
 SET SFISerror=0
 
 :SFIS
-IF "%Result%" NEQ "PASS" GOTO SFIS1
-
-:SFIS1
 python RESTSFIS-diag.py /UP -log %CSV_NAME%
 IF %ERRORLEVEL% NEQ 0 GOTO SFIS_fail
 GOTO END
@@ -303,9 +253,6 @@ echo SFIS Upload Fail
 Tools\Screen-diag.exe -nl -enter /ss 70 "SFIS Upload FAIL(%SFISerror%)! <br> <br>Please Check SFIS!<br> <br>Press [Enter] to Retry"  0xFFFFFF -bg 0xBB2222
 GOTO SFIS
 
-:LOGfail
-Tools\Screen-diag.exe -nl -enter /SS 40 "%CSV_NAME% Log line check fail, please check the log line!!" 0xFFFFFF -bg 0x882222
-
 :END
 IF "%Result%" NEQ "PASS" GOTO Record
 IF EXIST TSRID.dat DEL TSRID.dat
@@ -313,9 +260,31 @@ Tools\Screen-diag.exe -nl -enter /ss 200 "PASS"  0xFFFFFF -bg 0x008800
 Chopper-diag.exe /delay 500 2>nul
 taskkill /IM Screen-diag.exe
 
-CALL :UPLOAD_GRR_TO_GOOGLE_DRIVE
-CALL :WAIT_DUT_DISCONNECT
+CALL :UPLOAD_GRR_AND_WAIT_DUT_DISCONNECT
 GOTO Record
+
+:UPLOAD_GRR_AND_WAIT_DUT_DISCONNECT
+SET "GOOGLE_DRIVE_UPLOAD_STATUS=%TEMP%\ML_PreProcess_gdrive_status_%RANDOM%_%RANDOM%.tmp"
+DEL /Q "%GOOGLE_DRIVE_UPLOAD_STATUS%" "%GOOGLE_DRIVE_UPLOAD_STATUS%.new" 2>nul
+START "" /B CMD.EXE /D /C CALL "%~f0" __UPLOAD_GRR_WORKER
+IF %ERRORLEVEL% NEQ 0 >"%GOOGLE_DRIVE_UPLOAD_STATUS%" ECHO 1
+CALL :WAIT_DUT_DISCONNECT
+
+:WAIT_GOOGLE_DRIVE_UPLOAD
+IF NOT EXIST "%GOOGLE_DRIVE_UPLOAD_STATUS%" (
+	TIMEOUT /T 1 /NOBREAK >nul
+	GOTO WAIT_GOOGLE_DRIVE_UPLOAD
+)
+SET "GOOGLE_DRIVE_UPLOAD_EXITCODE=1"
+SET /P GOOGLE_DRIVE_UPLOAD_EXITCODE=<"%GOOGLE_DRIVE_UPLOAD_STATUS%"
+DEL /Q "%GOOGLE_DRIVE_UPLOAD_STATUS%" 2>nul
+SET "GOOGLE_DRIVE_UPLOAD_STATUS="
+DEL /Q "%TEST_RUN_MARKER%" 2>nul
+SET "TEST_RUN_MARKER="
+IF "%GOOGLE_DRIVE_UPLOAD_EXITCODE%" EQU "0" EXIT /B 0
+
+Tools\Screen-diag.exe -nl -enter /SS 40 "Google Drive upload FAIL!!<br><br>Log ID: %LOG_IDENTIFIER%<br>Please check rclone and network settings.<br><br>Press [Enter] to continue." 0xFFFFFF -bg 0x882222
+EXIT /B 1
 
 :WAIT_DUT_DISCONNECT
 START "" Tools\Screen-diag.exe -nl /SS 55 "Please disconnect the device from the computer.<br><br>Waiting for ADB device disconnection..." 0xFFFFFF -bg 0xFF7F25
@@ -368,32 +337,32 @@ RMDIR /S /Q "%GOOGLE_DRIVE_STAGE_ROOT%" 2>nul
 DEL /Q "%TEST_RUN_MARKER%" 2>nul
 SET "TEST_RUN_MARKER="
 IF "%GOOGLE_DRIVE_UPLOAD_FAILED%" EQU "0" EXIT /B 0
+IF DEFINED GOOGLE_DRIVE_UPLOAD_BACKGROUND EXIT /B 1
 
 Tools\Screen-diag.exe -nl -enter /SS 40 "Google Drive upload FAIL!!<br><br>Log ID: %LOG_IDENTIFIER%<br>Please check rclone and network settings.<br><br>Press [Enter] to continue." 0xFFFFFF -bg 0x882222
 EXIT /B 1
+
+:UPLOAD_GRR_WORKER
+SET "GOOGLE_DRIVE_UPLOAD_BACKGROUND=1"
+CALL :UPLOAD_GRR_TO_GOOGLE_DRIVE
+>"%GOOGLE_DRIVE_UPLOAD_STATUS%.new" ECHO %ERRORLEVEL%
+MOVE /Y "%GOOGLE_DRIVE_UPLOAD_STATUS%.new" "%GOOGLE_DRIVE_UPLOAD_STATUS%" >nul
+EXIT /B 0
 
 :Record
 IF "%MODE%" EQU "D" GOTO Record1
 cd %~dp0
 if exist %CSV_NAME% del %CSV_NAME%
 copy %FOLDER%\%CSV_NAME% %CSV_NAME%
-REM IF "%Result%" EQU "FAIL" Record-diag.exe /FAIL
-REM IF "%Result%" EQU "PASS" Record-diag.exe /PASS
 
 :Record1
-cd %~dp0%FOLDER%
 cd %~dp0
-IF "%MODE%" EQU "D" GOTO END_TIP
-
+IF "%MODE%" EQU "D" GOTO START
 
 :chk2Aroute
-IF "%Result%" EQU "PASS" GOTO END_TIP
+IF "%Result%" EQU "PASS" GOTO START
 Start DiagPGM\Screen-diag.exe -enter /SS 55 "Checking SN %SN% SFIS 2A status<br>Please wait... <br> <br>Checking 2A Status from SFIS<br>Please wait a moment..." 0xFFFFFF -bg 0x223366
 python RESTSFIS-diag\RESTSFIS-diag.py /C -sn %SN%
 IF %ERRORLEVEL% EQU 0 DiagPGM\Screen-diag.exe -enter /SS 40 "SN (2A) not allowed!!<br> <br>Please change another tester to do SN (2A) test!!<br><br>Press [ENTER] to continue..." 0xFFFFFF -bg 0x773399
 taskkill /IM Screen-diag.exe
-GOTO START
-
-
-:END_TIP
 GOTO START

@@ -66,7 +66,7 @@ rclone copy "%SOURCE%" "%REMOTE%:%DESTINATION_FOLDER%" ^
   --drive-root-folder-id "%ROOT_FOLDER_ID%" ^
   --progress ^
   --stats 30s ^
-  --transfers 1 ^
+  --transfers 8 ^
   --checkers 8 ^
   --drive-chunk-size 128M ^
   --retries 10 ^
