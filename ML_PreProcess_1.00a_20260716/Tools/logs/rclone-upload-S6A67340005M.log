@@ -27,3 +27,25 @@ Checks:                 0 / 0, -, Listed 2
 Transferred:            1 / 1, 100%
 Elapsed time:         7.7s
 
+2026/08/05 09:12:34 NOTICE: gdrive{iWtD9}: This remote uses rclone's shared Google Drive client_id, which is being retired and will stop working during 2026. Create your own client_id to avoid interruption: https://rclone.org/drive/#making-your-own-client-id
+2026/08/05 09:12:35 NOTICE: gdrive{iWtD9}: This remote uses rclone's shared Google Drive client_id, which is being retired and will stop working during 2026. Create your own client_id to avoid interruption: https://rclone.org/drive/#making-your-own-client-id
+2026/08/05 09:12:36 INFO  : Google drive root 'S6A67340005M': Making directory
+2026/08/05 09:12:36 NOTICE: gdrive{5SXnH}: This remote uses rclone's shared Google Drive client_id, which is being retired and will stop working during 2026. Create your own client_id to avoid interruption: https://rclone.org/drive/#making-your-own-client-id
+2026/08/05 09:12:37 INFO  : There was nothing to transfer
+2026/08/05 09:12:37 INFO  : 
+Transferred:   	          0 B / 0 B, -, 0 B/s, ETA -
+Checks:                 0 / 0, -, Listed 7
+Elapsed time:         0.7s
+
+2026/08/05 09:12:37 NOTICE: gdrive{iWtD9}: This remote uses rclone's shared Google Drive client_id, which is being retired and will stop working during 2026. Create your own client_id to avoid interruption: https://rclone.org/drive/#making-your-own-client-id
+2026/08/05 09:12:38 NOTICE: gdrive{iWtD9}: This remote uses rclone's shared Google Drive client_id, which is being retired and will stop working during 2026. Create your own client_id to avoid interruption: https://rclone.org/drive/#making-your-own-client-id
+2026/08/05 09:12:39 INFO  : Google drive root 'S6A67340005M': Making directory
+2026/08/05 09:12:39 NOTICE: gdrive{5SXnH}: This remote uses rclone's shared Google Drive client_id, which is being retired and will stop working during 2026. Create your own client_id to avoid interruption: https://rclone.org/drive/#making-your-own-client-id
+2026/08/05 09:12:47 INFO  : Pre/log_file_20260805_091034.log: Copied (new)
+2026/08/05 09:12:48 INFO  : Pre: Set directory modification time (using DirSetModTime)
+2026/08/05 09:12:48 INFO  : 
+Transferred:   	  128.483 KiB / 128.483 KiB, 100%, 25.696 KiB/s, ETA 0s
+Checks:                 0 / 0, -, Listed 3
+Transferred:            1 / 1, 100%
+Elapsed time:         8.0s
+
