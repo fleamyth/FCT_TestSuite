@@ -19,6 +19,8 @@ if "%DRIVE_URL%"=="" (
 
 if "%SOURCE:~-1%"=="\" set "SOURCE=%SOURCE:~0,-1%"
 for %%I in ("%SOURCE%") do set "DESTINATION_FOLDER=%%~nxI"
+set "DESTINATION_PATH=%~4"
+if "%DESTINATION_PATH%"=="" set "DESTINATION_PATH=%DESTINATION_FOLDER%"
 
 set "ROOT_FOLDER_ID=%DRIVE_URL:https://drive.google.com/drive/folders/=%"
 for /f "tokens=1 delims=?/" %%I in ("%ROOT_FOLDER_ID%") do set "ROOT_FOLDER_ID=%%I"
@@ -55,14 +57,14 @@ if errorlevel 1 (
 )
 
 echo Creating the destination folder if needed...
-rclone mkdir "%REMOTE%:%DESTINATION_FOLDER%" --drive-root-folder-id "%ROOT_FOLDER_ID%" --log-file "%LOG_FILE%" --log-level INFO
+rclone mkdir "%REMOTE%:%DESTINATION_PATH%" --drive-root-folder-id "%ROOT_FOLDER_ID%" --log-file "%LOG_FILE%" --log-level INFO
 if errorlevel 1 (
   echo ERROR: Could not create or access the destination folder.
   exit /b 5
 )
 
 echo Uploading "%SOURCE%" to Google Drive...
-rclone copy "%SOURCE%" "%REMOTE%:%DESTINATION_FOLDER%" ^
+rclone copy "%SOURCE%" "%REMOTE%:%DESTINATION_PATH%" ^
   --drive-root-folder-id "%ROOT_FOLDER_ID%" ^
   --progress ^
   --stats 30s ^
@@ -85,7 +87,7 @@ exit /b 0
 
 :usage
 echo Usage:
-echo   %~nx0 "LOCAL_FOLDER" "GOOGLE_DRIVE_FOLDER_URL_OR_ID" [RCLONE_REMOTE]
+echo   %~nx0 "LOCAL_FOLDER" "GOOGLE_DRIVE_FOLDER_URL_OR_ID" [RCLONE_REMOTE] [DESTINATION_PATH]
 echo.
 echo Examples:
 echo   %~nx0 "D:\RoboGRR\S6A67340005X" "https://drive.google.com/drive/folders/1PLmAKzagiYLUTX2Eqh8S_fDR1nE6tC5E"
