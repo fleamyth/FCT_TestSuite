@@ -84,11 +84,6 @@ adb reboot
 echo Waiting for device to come back online...
 adb wait-for-device
 call :echo_green "Reboot completed."
-
-if !NONINTERACTIVE! equ 0 (
-    pause
-)
-
 exit /b 0
 
 :usage
